@@ -28,13 +28,8 @@ listing:
     <div class="subtitle">Machine Learning Engineering</div>
 
     <div class="cta-row">
-      <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
       <a class="cta" href="posts/index.html">BLOG</a>
-      <a class="cta"
-         href=""
-         onclick="Calendly.initPopupWidget({url: 'https://calendly.com/vartia'}); return false;">
-         BOOK A CONSULT
-</a>
+      <a class="cta" href="book.html">BOOK A CONSULT</a>
       
     </div>
   </div>

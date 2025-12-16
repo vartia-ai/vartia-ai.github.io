@@ -9,7 +9,7 @@
 <meta name="author" content="Brian Williams">
 <meta name="dcterms.date" content="2025-12-15">
 
-<title>OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4) – Vartia.ai</title>
+<title>OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ – Vartia.ai</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -26,6 +26,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<link href="../../assets/favicon.svg" rel="icon" type="image/svg+xml">
 <script src="../../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -74,7 +75,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)</h1>
+      <h1 class="title">OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">CVE</div>
                 <div class="quarto-category">Software Weakness</div>
@@ -111,12 +112,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
 <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>
+(function() {
+  var ns = document.getElementById('gtm-noscript');
+  if (ns && document.body) {
+    document.body.insertBefore(ns, document.body.firstChild);
+  }
+})();
+</script>
+<noscript id="gtm-noscript"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
-<script src="https://assets.calendly.com/assets/external/widget.js" async=""></script>
 <div class="nav-header">
   <a href="../../" class="nav-logo">vartia</a>
-  <a href="" class="nav-cta" onclick="Calendly.initPopupWidget({url: 'https://calendly.com/vartia'}); return false;">
+  <a href="../../book.html" class="nav-cta">
      Book a Consult
   </a>
 </div>
@@ -307,7 +315,7 @@ The goal was to classify vulnerabilities <em>as they manifest in code</em>.</p>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/your-website-url\.example\.com");
+        var filterRegex = new RegExp("https:\/\/vartia\.ai");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

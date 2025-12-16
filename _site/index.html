@@ -24,6 +24,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<link href="./assets/favicon.svg" rel="icon" type="image/svg+xml">
 <script src="site_libs/quarto-listing/list.min.js"></script>
 <script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
@@ -136,7 +137,15 @@ window.Quarto = {
 <!-- main -->
 <main class="content column-page" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>
+(function() {
+  var ns = document.getElementById('gtm-noscript');
+  if (ns && document.body) {
+    document.body.insertBefore(ns, document.body.firstChild);
+  }
+})();
+</script>
+<noscript id="gtm-noscript"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 
@@ -156,11 +165,8 @@ window.Quarto = {
     <div class="subtitle">Machine Learning Engineering</div>
 
     <div class="cta-row">
-      <script src="https://assets.calendly.com/assets/external/widget.js" async=""></script>
       <a class="cta" href="posts/index.html">BLOG</a>
-      <a class="cta" href="" onclick="Calendly.initPopupWidget({url: 'https://calendly.com/vartia'}); return false;">
-         BOOK A CONSULT
-</a>
+      <a class="cta" href="book.html">BOOK A CONSULT</a>
       
     </div>
   </div>
@@ -174,7 +180,7 @@ window.Quarto = {
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="Q1ZFJTJDU29mdHdhcmUlMjBXZWFrbmVzcyUyQ01lbW9yeSUyMFZ1bG5lcmFiaWxpdGllcw==" data-listing-date-sort="1765785600000" data-listing-file-modified-sort="1765923338260" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="701">
+<div class="quarto-post image-right" data-index="0" data-categories="Q1ZFJTJDU29mdHdhcmUlMjBXZWFrbmVzcyUyQ01lbW9yeSUyMFZ1bG5lcmFiaWxpdGllcw==" data-listing-date-sort="1765785600000" data-listing-file-modified-sort="1765925528041" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="701">
 <div class="thumbnail"><a href="./posts/oobench1/index.html" class="no-external">
 
 <img loading="lazy" src="./posts/oobench1/thumbnail.png" class="thumbnail-image">
@@ -182,7 +188,7 @@ window.Quarto = {
 </a></div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./posts/oobench1/index.html" class="no-external">OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)</a>
+<a href="./posts/oobench1/index.html" class="no-external">OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++</a>
 </h3>
 <div class="delink listing-description"><a href="./posts/oobench1/index.html" class="no-external">
 Memory-related bugs are some of the most common and costly security failures in software.<br>
@@ -276,7 +282,7 @@ Brian Williams
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/your-website-url\.example\.com");
+        var filterRegex = new RegExp("https:\/\/vartia\.ai");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

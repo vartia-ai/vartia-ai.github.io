@@ -7,6 +7,7 @@ website:
   title: "Vartia.ai"
   navbar: false
   search: false
+  favicon: assets/favicon.svg
 format:
   html:
     theme:
@@ -14,5 +15,8 @@ format:
       - brand
     css: styles.css
     include-in-header: includes/gtm-head.html
+    include-before-body: includes/gtm-body.html
     template-partials:
       - templates/nav-before-body.ejs
+resources:
+  - site_libs

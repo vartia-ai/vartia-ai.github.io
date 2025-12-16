@@ -1,5 +1,5 @@
 ---
-title: "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)"
+title: "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++"
 author: "Brian Williams"
 date: "2025-12-15"
 categories:
