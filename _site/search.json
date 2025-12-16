@@ -4,112 +4,98 @@
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "About this blog"
-  },
-  {
-    "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html",
-    "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html",
-    "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Build a local 3D “memory space” thumbnail generator that renders a vast, structured field of nodes + connections with a small number of “misbehaving” connections (wrong pointers, missing links, dangling edges). Output multiple candidate images per iteration so the human can pick the best.\nThe system runs in rounds:\n\nRound 0 (Seed Round): generate 4 distinct generator styles.\nHuman picks 1 winner.\nRound N (Refine Round): generate 4 candidates:\n\n3 refinements of the winner (parameter tweaks + small aesthetic variants)\n1 “new idea” variant (introduce one new generator mechanism or overlay) while staying close to the winner’s look.\n\n\nRepeat until the thumbnail is “good”.\n\n\n\n\n\nA local program that produces:\n\nout/round_&lt;r&gt;/candidate_&lt;k&gt;/thumb.png (1200×627)\nout/round_&lt;r&gt;/candidate_&lt;k&gt;/scene.json (params, seed, generator name, palette)\nout/round_&lt;r&gt;/index.html (gallery viewer + click-to-select)\n\nA simple CLI:\n\nnpm run gen -- --round 0\nnpm run gen -- --round 1 --parent out/round_0/candidate_2/scene.json\n\nOptional: a lightweight heuristic score so the tool can auto-rank (but human choice remains the gate).\n\n\n\n\n\n\n\n\nThree.js (WebGL2) for scene + camera + render targets\nCustom vertex/fragment shaders for:\n\nadditive glowing lines\npoint sprites (nodes) with soft halos\ndepth fog\n\nOptional postprocessing:\n\nbloom (UnrealBloomPass)\nsubtle vignette\n\n\n\n\n\nGenerate the graph (nodes + edges) on CPU (TypeScript/JS) for fast iteration/debugging, then send: - node positions as instanced points - edges as a single line segment buffer (or segmented instancing)\nThis keeps the “shader look” while making structural experiments easy.\n\n\n\n\n\n\nBackground: near-black\n“Healthy” structure: dim cyan/teal lines and nodes, depth-faded\n“Misbehaving” edges: sparse, warm accent (orange/red) only a few\nDensity: high enough to feel “vast”, but not so dense it becomes noise at small size\nNo text, no arrows, no UI chrome\nComposition: one subtle focal area (the defect cluster), not dead center\n\nOutput size: - 1200×627 (LinkedIn + OpenGraph friendly)\n\n\n\n\n\n\n\nPlace nodes in a 3D volume (e.g., Nx × Ny × Nz grid) with slight jitter.\nExample: Nx=36, Ny=18, Nz=10 (~6480 nodes), then subsample to 1500–3000 for readability.\nApply “depth fog” so distant nodes fade.\n\n\n\n\nThe generator determines most edges. Keep them short-range and locally coherent.\n\n\n\nAlways add a small set of defects after generating healthy edges: - Choose M corrupted nodes (e.g., 4–12). - For each corrupted node: - remove 1–3 normal edges - add 1–2 wrong edges to far nodes (“wrong pointer”) - optionally add 1 dangling edge (ray that fades into space) - Add a subtle local distortion or halo around corrupted nodes (optional).\n\n\n\n\n\nImplement these four first. They each produce a different “rhythm” of connectivity.\n\n\nMemory-like adjacency + periodic strides. - Index nodes by linear address i. - Add edges: - local: i ↔︎ i±1..k - stride: i ↔︎ i±s for a few s values (simulate cache-line/page rhythms) - Optional: jitter stride using smooth noise.\n\n\n\nHierarchical punctuated structure. - Assign each node a level L(i) (geometric distribution via hash/ctz). - Edges: - level0: i ↔︎ i+1 - higher: i ↔︎ i+2^L(i) (and/or backward)\n\n\n\nTernary Cantor set-inspired gaps and plateaus. Use one of: - Cantor mask: remove edges/nodes inside middle-third gaps at depth d. - Cantor function warp: map i → j = floor(N * F(i/N)) (Cantor function), then connect locally around j.\n\n\n\nUse an L-system to create a sparse “vascular” backbone, then attach local lattice edges. - Build 3D turtle grammar (e.g., F -&gt; F[+F]F[-F]F with randomization). - Convert segments into edges (or tubes rendered as line segments). - Sprinkle nodes near segments; connect nodes to nearest segment points.\n\n\n\n\n\nAfter the user picks a winner, generate 4 candidates:\n\n\nStay in the same generator family; vary only: - node count + fog curve - line thickness + glow - defect count and severity - depth jitter / camera pose (small) - palette tweaks (keep within brand)\n\n\n\nAdd exactly one new mechanism while preserving the overall look: - small-world rewiring pass (Watts–Strogatz) on top of base edges - page/segment hierarchy overlay - subtle space-filling curve mapping (Morton/Hilbert ordering) - add L-system artery layer (if not already used) - add a “phase seam” region (local parameter change)\nRule: only one novelty per round so you can attribute improvements.\n\n\n\n\n\n\n\nTo test whether t ∈ [0,1) lies in the removed middle-third at depth d: 1. Repeat d times: - t *= 3 - digit = floor(t) - if digit == 1 → removed interval - t -= digit 2. If never hit digit 1 → kept.\n\n\n\nApproximate by iterating ternary digits and building a binary value: - ternary 0 → binary 0 - ternary 2 → binary 1 - ternary 1 → plateau clamp\n\n\n\n\nMaintain position + orientation (quaternion)\nSymbols:\n\nF: move forward and draw\n+/-: yaw\n&/^: pitch\n\\ /: roll\n[ push state, ] pop state\n\nRandomize angles slightly per segment for organic look.\n\n\n\n\n\n\n\nNodes: instanced point sprites with soft radial alpha falloff.\nEdges: line segments rendered with additive blending and depth-based attenuation.\nDefect edges: warmer color, slightly brighter, optional subtle flicker.\nFog: exponential or quadratic based on camera-space z.\n\n\n\n\n\n\nRun Round 0: produce 4 candidates (A–D).\nHuman selects one: record selected scene.json.\nRun next round with --parent &lt;scene.json&gt;: generate 3 refinements + 1 new idea.\nRepeat until final.\n\n\n\n\n\nCompute quick scores to help browsing (do not overfit): - bright pixel ratio (avoid wash-out) - edge density center vs corners (prefer mild focal region) - entropy / edge count (avoid clutter) - accent pixel ratio (defects should be sparse)\nUse these only to sort; human decides.\n\n\n\n\nA chosen thumbnail that: - reads as “vast memory structure” at small sizes, - clearly suggests “localized misbehavior,” - matches Vartia’s dark/clean aesthetic, - is reproducible via scene.json (seed + params).\n\n\n\n\n\nMake sure that the user can backtrack to previous versions of the code. Allow backtracking and rebranching. Save the code in a way that makes this easy."
+    "text": "&lt;iframe src=\"https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF\" height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"&gt;&lt;/iframe&gt;\n\nAbout this blog"
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#goal",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#goal",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Build a local 3D “memory space” thumbnail generator that renders a vast, structured field of nodes + connections with a small number of “misbehaving” connections (wrong pointers, missing links, dangling edges). Output multiple candidate images per iteration so the human can pick the best.\nThe system runs in rounds:\n\nRound 0 (Seed Round): generate 4 distinct generator styles.\nHuman picks 1 winner.\nRound N (Refine Round): generate 4 candidates:\n\n3 refinements of the winner (parameter tweaks + small aesthetic variants)\n1 “new idea” variant (introduce one new generator mechanism or overlay) while staying close to the winner’s look.\n\n\nRepeat until the thumbnail is “good”."
+    "section": "Goal",
+    "text": "Goal\nBuild a local 3D “memory space” thumbnail generator that renders a vast, structured field of nodes + connections with a small number of “misbehaving” connections (wrong pointers, missing links, dangling edges). Output multiple candidate images per iteration so the human can pick the best.\nThe system runs in rounds:\n\nRound 0 (Seed Round): generate 4 distinct generator styles.\nHuman picks 1 winner.\nRound N (Refine Round): generate 4 candidates:\n\n3 refinements of the winner (parameter tweaks + small aesthetic variants)\n1 “new idea” variant (introduce one new generator mechanism or overlay) while staying close to the winner’s look.\n\n\nRepeat until the thumbnail is “good”."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#deliverables",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#deliverables",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "A local program that produces:\n\nout/round_&lt;r&gt;/candidate_&lt;k&gt;/thumb.png (1200×627)\nout/round_&lt;r&gt;/candidate_&lt;k&gt;/scene.json (params, seed, generator name, palette)\nout/round_&lt;r&gt;/index.html (gallery viewer + click-to-select)\n\nA simple CLI:\n\nnpm run gen -- --round 0\nnpm run gen -- --round 1 --parent out/round_0/candidate_2/scene.json\n\nOptional: a lightweight heuristic score so the tool can auto-rank (but human choice remains the gate)."
+    "section": "Deliverables",
+    "text": "Deliverables\n\nA local program that produces:\n\nout/round_&lt;r&gt;/candidate_&lt;k&gt;/thumb.png (1200×627)\nout/round_&lt;r&gt;/candidate_&lt;k&gt;/scene.json (params, seed, generator name, palette)\nout/round_&lt;r&gt;/index.html (gallery viewer + click-to-select)\n\nA simple CLI:\n\nnpm run gen -- --round 0\nnpm run gen -- --round 1 --parent out/round_0/candidate_2/scene.json\n\nOptional: a lightweight heuristic score so the tool can auto-rank (but human choice remains the gate)."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#recommended-tech-stack",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#recommended-tech-stack",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Three.js (WebGL2) for scene + camera + render targets\nCustom vertex/fragment shaders for:\n\nadditive glowing lines\npoint sprites (nodes) with soft halos\ndepth fog\n\nOptional postprocessing:\n\nbloom (UnrealBloomPass)\nsubtle vignette\n\n\n\n\n\nGenerate the graph (nodes + edges) on CPU (TypeScript/JS) for fast iteration/debugging, then send: - node positions as instanced points - edges as a single line segment buffer (or segmented instancing)\nThis keeps the “shader look” while making structural experiments easy."
+    "section": "Recommended Tech Stack",
+    "text": "Recommended Tech Stack\n\nRendering\n\nThree.js (WebGL2) for scene + camera + render targets\nCustom vertex/fragment shaders for:\n\nadditive glowing lines\npoint sprites (nodes) with soft halos\ndepth fog\n\nOptional postprocessing:\n\nbloom (UnrealBloomPass)\nsubtle vignette\n\n\n\n\nGeneration (CPU-side)\nGenerate the graph (nodes + edges) on CPU (TypeScript/JS) for fast iteration/debugging, then send: - node positions as instanced points - edges as a single line segment buffer (or segmented instancing)\nThis keeps the “shader look” while making structural experiments easy."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#visual-spec",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#visual-spec",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Background: near-black\n“Healthy” structure: dim cyan/teal lines and nodes, depth-faded\n“Misbehaving” edges: sparse, warm accent (orange/red) only a few\nDensity: high enough to feel “vast”, but not so dense it becomes noise at small size\nNo text, no arrows, no UI chrome\nComposition: one subtle focal area (the defect cluster), not dead center\n\nOutput size: - 1200×627 (LinkedIn + OpenGraph friendly)"
+    "section": "Visual Spec",
+    "text": "Visual Spec\n\nBackground: near-black\n“Healthy” structure: dim cyan/teal lines and nodes, depth-faded\n“Misbehaving” edges: sparse, warm accent (orange/red) only a few\nDensity: high enough to feel “vast”, but not so dense it becomes noise at small size\nNo text, no arrows, no UI chrome\nComposition: one subtle focal area (the defect cluster), not dead center\n\nOutput size: - 1200×627 (LinkedIn + OpenGraph friendly)"
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#core-scene-geometry",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#core-scene-geometry",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Place nodes in a 3D volume (e.g., Nx × Ny × Nz grid) with slight jitter.\nExample: Nx=36, Ny=18, Nz=10 (~6480 nodes), then subsample to 1500–3000 for readability.\nApply “depth fog” so distant nodes fade.\n\n\n\n\nThe generator determines most edges. Keep them short-range and locally coherent.\n\n\n\nAlways add a small set of defects after generating healthy edges: - Choose M corrupted nodes (e.g., 4–12). - For each corrupted node: - remove 1–3 normal edges - add 1–2 wrong edges to far nodes (“wrong pointer”) - optionally add 1 dangling edge (ray that fades into space) - Add a subtle local distortion or halo around corrupted nodes (optional)."
+    "section": "Core Scene Geometry",
+    "text": "Core Scene Geometry\n\nNodes\n\nPlace nodes in a 3D volume (e.g., Nx × Ny × Nz grid) with slight jitter.\nExample: Nx=36, Ny=18, Nz=10 (~6480 nodes), then subsample to 1500–3000 for readability.\nApply “depth fog” so distant nodes fade.\n\n\n\nHealthy Edges\nThe generator determines most edges. Keep them short-range and locally coherent.\n\n\nDefects (Misbehavior Injection)\nAlways add a small set of defects after generating healthy edges: - Choose M corrupted nodes (e.g., 4–12). - For each corrupted node: - remove 1–3 normal edges - add 1–2 wrong edges to far nodes (“wrong pointer”) - optionally add 1 dangling edge (ray that fades into space) - Add a subtle local distortion or halo around corrupted nodes (optional)."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#round-0-four-seed-generators",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#round-0-four-seed-generators",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Implement these four first. They each produce a different “rhythm” of connectivity.\n\n\nMemory-like adjacency + periodic strides. - Index nodes by linear address i. - Add edges: - local: i ↔︎ i±1..k - stride: i ↔︎ i±s for a few s values (simulate cache-line/page rhythms) - Optional: jitter stride using smooth noise.\n\n\n\nHierarchical punctuated structure. - Assign each node a level L(i) (geometric distribution via hash/ctz). - Edges: - level0: i ↔︎ i+1 - higher: i ↔︎ i+2^L(i) (and/or backward)\n\n\n\nTernary Cantor set-inspired gaps and plateaus. Use one of: - Cantor mask: remove edges/nodes inside middle-third gaps at depth d. - Cantor function warp: map i → j = floor(N * F(i/N)) (Cantor function), then connect locally around j.\n\n\n\nUse an L-system to create a sparse “vascular” backbone, then attach local lattice edges. - Build 3D turtle grammar (e.g., F -&gt; F[+F]F[-F]F with randomization). - Convert segments into edges (or tubes rendered as line segments). - Sprinkle nodes near segments; connect nodes to nearest segment points."
+    "section": "Round 0: Four Seed Generators",
+    "text": "Round 0: Four Seed Generators\nImplement these four first. They each produce a different “rhythm” of connectivity.\n\nGenerator A: Strided Locality (Address Arithmetic)\nMemory-like adjacency + periodic strides. - Index nodes by linear address i. - Add edges: - local: i ↔︎ i±1..k - stride: i ↔︎ i±s for a few s values (simulate cache-line/page rhythms) - Optional: jitter stride using smooth noise.\n\n\nGenerator B: Skip-List Express Lanes\nHierarchical punctuated structure. - Assign each node a level L(i) (geometric distribution via hash/ctz). - Edges: - level0: i ↔︎ i+1 - higher: i ↔︎ i+2^L(i) (and/or backward)\n\n\nGenerator C: Cantor / Devil’s Staircase Warp\nTernary Cantor set-inspired gaps and plateaus. Use one of: - Cantor mask: remove edges/nodes inside middle-third gaps at depth d. - Cantor function warp: map i → j = floor(N * F(i/N)) (Cantor function), then connect locally around j.\n\n\nGenerator D: L-System Vascular Overlay (Tree Arteries)\nUse an L-system to create a sparse “vascular” backbone, then attach local lattice edges. - Build 3D turtle grammar (e.g., F -&gt; F[+F]F[-F]F with randomization). - Convert segments into edges (or tubes rendered as line segments). - Sprinkle nodes near segments; connect nodes to nearest segment points."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#refinement-rounds-3-refinements-1-new-idea",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#refinement-rounds-3-refinements-1-new-idea",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "After the user picks a winner, generate 4 candidates:\n\n\nStay in the same generator family; vary only: - node count + fog curve - line thickness + glow - defect count and severity - depth jitter / camera pose (small) - palette tweaks (keep within brand)\n\n\n\nAdd exactly one new mechanism while preserving the overall look: - small-world rewiring pass (Watts–Strogatz) on top of base edges - page/segment hierarchy overlay - subtle space-filling curve mapping (Morton/Hilbert ordering) - add L-system artery layer (if not already used) - add a “phase seam” region (local parameter change)\nRule: only one novelty per round so you can attribute improvements."
+    "section": "Refinement Rounds: 3 Refinements + 1 New Idea",
+    "text": "Refinement Rounds: 3 Refinements + 1 New Idea\nAfter the user picks a winner, generate 4 candidates:\n\nCandidate 1–3: Refinements\nStay in the same generator family; vary only: - node count + fog curve - line thickness + glow - defect count and severity - depth jitter / camera pose (small) - palette tweaks (keep within brand)\n\n\nCandidate 4: New Idea Variant\nAdd exactly one new mechanism while preserving the overall look: - small-world rewiring pass (Watts–Strogatz) on top of base edges - page/segment hierarchy overlay - subtle space-filling curve mapping (Morton/Hilbert ordering) - add L-system artery layer (if not already used) - add a “phase seam” region (local parameter change)\nRule: only one novelty per round so you can attribute improvements."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#implementation-notes",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#implementation-notes",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "To test whether t ∈ [0,1) lies in the removed middle-third at depth d: 1. Repeat d times: - t *= 3 - digit = floor(t) - if digit == 1 → removed interval - t -= digit 2. If never hit digit 1 → kept.\n\n\n\nApproximate by iterating ternary digits and building a binary value: - ternary 0 → binary 0 - ternary 2 → binary 1 - ternary 1 → plateau clamp\n\n\n\n\nMaintain position + orientation (quaternion)\nSymbols:\n\nF: move forward and draw\n+/-: yaw\n&/^: pitch\n\\ /: roll\n[ push state, ] pop state\n\nRandomize angles slightly per segment for organic look."
+    "section": "Implementation Notes",
+    "text": "Implementation Notes\n\nCantor membership test (ternary)\nTo test whether t ∈ [0,1) lies in the removed middle-third at depth d: 1. Repeat d times: - t *= 3 - digit = floor(t) - if digit == 1 → removed interval - t -= digit 2. If never hit digit 1 → kept.\n\n\nCantor function approximation (devil’s staircase)\nApproximate by iterating ternary digits and building a binary value: - ternary 0 → binary 0 - ternary 2 → binary 1 - ternary 1 → plateau clamp\n\n\nL-system 3D turtle\n\nMaintain position + orientation (quaternion)\nSymbols:\n\nF: move forward and draw\n+/-: yaw\n&/^: pitch\n\\ /: roll\n[ push state, ] pop state\n\nRandomize angles slightly per segment for organic look."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#rendering-details-shader-friendly",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#rendering-details-shader-friendly",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Nodes: instanced point sprites with soft radial alpha falloff.\nEdges: line segments rendered with additive blending and depth-based attenuation.\nDefect edges: warmer color, slightly brighter, optional subtle flicker.\nFog: exponential or quadratic based on camera-space z."
+    "section": "Rendering Details (Shader-Friendly)",
+    "text": "Rendering Details (Shader-Friendly)\n\nNodes: instanced point sprites with soft radial alpha falloff.\nEdges: line segments rendered with additive blending and depth-based attenuation.\nDefect edges: warmer color, slightly brighter, optional subtle flicker.\nFog: exponential or quadratic based on camera-space z."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#selection-iteration-workflow",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#selection-iteration-workflow",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Run Round 0: produce 4 candidates (A–D).\nHuman selects one: record selected scene.json.\nRun next round with --parent &lt;scene.json&gt;: generate 3 refinements + 1 new idea.\nRepeat until final."
+    "section": "Selection & Iteration Workflow",
+    "text": "Selection & Iteration Workflow\n\nRun Round 0: produce 4 candidates (A–D).\nHuman selects one: record selected scene.json.\nRun next round with --parent &lt;scene.json&gt;: generate 3 refinements + 1 new idea.\nRepeat until final."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#optional-auto-ranking-heuristics",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#optional-auto-ranking-heuristics",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Compute quick scores to help browsing (do not overfit): - bright pixel ratio (avoid wash-out) - edge density center vs corners (prefer mild focal region) - entropy / edge count (avoid clutter) - accent pixel ratio (defects should be sparse)\nUse these only to sort; human decides."
+    "section": "Optional Auto-Ranking Heuristics",
+    "text": "Optional Auto-Ranking Heuristics\nCompute quick scores to help browsing (do not overfit): - bright pixel ratio (avoid wash-out) - edge density center vs corners (prefer mild focal region) - entropy / edge count (avoid clutter) - accent pixel ratio (defects should be sparse)\nUse these only to sort; human decides."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#definition-of-done",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#definition-of-done",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "A chosen thumbnail that: - reads as “vast memory structure” at small sizes, - clearly suggests “localized misbehavior,” - matches Vartia’s dark/clean aesthetic, - is reproducible via scene.json (seed + params)."
+    "section": "Definition of Done",
+    "text": "Definition of Done\nA chosen thumbnail that: - reads as “vast memory structure” at small sizes, - clearly suggests “localized misbehavior,” - matches Vartia’s dark/clean aesthetic, - is reproducible via scene.json (seed + params)."
   },
   {
     "objectID": "thumbnail_gen/vartia_thumbnail_shader_brief.html#meta-goal",
     "href": "thumbnail_gen/vartia_thumbnail_shader_brief.html#meta-goal",
     "title": "Vartia OOBench Thumbnail Generator",
-    "section": "",
-    "text": "Make sure that the user can backtrack to previous versions of the code. Allow backtracking and rebranching. Save the code in a way that makes this easy."
-  },
-  {
-    "objectID": "posts/oobench1/index.html",
-    "href": "posts/oobench1/index.html",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "",
-    "text": "vartia\n  \n     Book a Consult"
+    "section": "meta goal",
+    "text": "meta goal\n\nMake sure that the user can backtrack to previous versions of the code. Allow backtracking and rebranching. Save the code in a way that makes this easy."
   },
   {
     "objectID": "posts/oobench1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
@@ -159,13 +145,6 @@
     "title": "Vartia.ai",
     "section": "",
     "text": "vartia\n  \n     Book a Consult\n  \n\n\n\n\n\n\n\n\nExplore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)\n\n\n\n\n\n\n\n\nDec 15, 2025\n\n\nBrian Williams\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Vartia.ai",
-    "section": "",
-    "text": "Machine Learning Engineering\n\n    \n      \n      BLOG\n      \n         BOOK A CONSULT"
   },
   {
     "objectID": "index.html#latest-articles",

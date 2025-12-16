@@ -2,8 +2,8 @@ project:
   type: website
 
 website:
-  description: "A blog built with Quarto"
-  site-url: https://your-website-url.example.com # you must change this appropriately for RSS feeds to work properly
+  description: "Custom LLM pipelines for real problems: embeddings, evaluation frameworks, synthetic data generation, and domain-specific retrieval systems."
+  site-url: https://vartia.ai
   title: "Vartia.ai"
   navbar: false
   search: false
@@ -13,5 +13,6 @@ format:
       - cosmo
       - brand
     css: styles.css
-
-
+    include-in-header: includes/gtm-head.html
+    template-partials:
+      - templates/nav-before-body.ejs
