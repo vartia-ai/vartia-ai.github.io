@@ -6,7 +6,7 @@ categories:
   - CVE
   - Software Weakness
   - Memory Vulnerabilities
-image: image.jpg
+image: thumbnail.png
 include-after-body: ../footer_meta.html
 ---
 

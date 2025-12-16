@@ -29,7 +29,11 @@ listing:
 
     <div class="cta-row">
       <a class="cta" href="posts/index.html">BLOG</a>
-      <a class="cta" href="https://calendly.com/vartia" target="_blank" rel="noopener">BOOK A CONSULT</a>
+      <a class="cta" href=""
+   onclick="Calendly.initPopupWidget({url: 'https://calendly.com/vartia'});return false;">
+   BOOK A CONSULT
+</a>
+      
     </div>
   </div>
 </div>

@@ -10,10 +10,14 @@
   </url>
   <url>
     <loc>https://your-website-url.example.com/posts/oobench1/index.html</loc>
-    <lastmod>2025-12-16T04:47:08.133Z</lastmod>
+    <lastmod>2025-12-16T22:15:38.260Z</lastmod>
   </url>
   <url>
     <loc>https://your-website-url.example.com/index.html</loc>
-    <lastmod>2025-12-16T04:38:53.316Z</lastmod>
+    <lastmod>2025-12-16T22:15:39.774Z</lastmod>
+  </url>
+  <url>
+    <loc>https://your-website-url.example.com/thumbnail_gen/vartia_thumbnail_shader_brief.html</loc>
+    <lastmod>2025-12-16T18:19:05.244Z</lastmod>
   </url>
 </urlset>
