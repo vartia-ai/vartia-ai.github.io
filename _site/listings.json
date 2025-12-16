@@ -1,24 +1,14 @@
 [
   {
-    "listing": "/blog.html",
-    "items": [
-      "/posts/post-with-code/index.html",
-      "/posts/welcome/index.html"
-    ]
-  },
-  {
-    "listing": "/posts.html",
-    "items": [
-      "/posts/post-with-code/index.html",
-      "/posts/welcome/index.html"
-    ]
-  },
-  {
     "listing": "/posts/index.html",
     "items": [
-      "/posts/draft.html",
-      "/posts/oobench1/index.html",
-      "/posts/welcome/index.html"
+      "/posts/oobench1/index.html"
+    ]
+  },
+  {
+    "listing": "/index.html",
+    "items": [
+      "/posts/oobench1/index.html"
     ]
   }
 ]

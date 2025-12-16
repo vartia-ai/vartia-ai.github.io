@@ -6,6 +6,11 @@ format:
     toc: false
     md-extensions:
       - -markdown_in_html_blocks
+    body-classes: home
+listing:
+  contents:
+    - posts/*/index.qmd
+  sort: "date desc"
 ---
 
 ```{=html}
@@ -29,3 +34,7 @@ format:
   </div>
 </div>
 ```
+
+::: {.home-listing}
+## Latest Articles
+:::

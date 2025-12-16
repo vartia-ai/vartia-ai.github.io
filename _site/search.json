@@ -1,33 +1,5 @@
 [
   {
-    "objectID": "blog.html",
-    "href": "blog.html",
-    "title": "Blog",
-    "section": "",
-    "text": "Explore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPost With Code\n\n\n\n\n\n\n\n\nDec 5, 2025\n\n\nHarlow Malloc\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\n\nDec 2, 2025\n\n\nTristan O’Malley\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Vartia.ai",
-    "section": "",
-    "text": "Machine Learning Engineering\n\n    \n      BLOG\n      BOOK A CONSULT"
-  },
-  {
-    "objectID": "posts/post-with-code/index.html",
-    "href": "posts/post-with-code/index.html",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "",
-    "text": "vartia\n  Book a Consult"
-  },
-  {
-    "objectID": "posts/welcome/index.html",
-    "href": "posts/welcome/index.html",
-    "title": "Welcome To My Blog",
-    "section": "",
-    "text": "vartia\n  Book a Consult\n\n\n\n\n\n\nThis is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
-  },
-  {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
@@ -35,67 +7,11 @@
     "text": "About this blog"
   },
   {
-    "objectID": "posts.html",
-    "href": "posts.html",
-    "title": "Blog",
-    "section": "",
-    "text": "Explore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPost With Code\n\n\n\n\n\n\n\n\nDec 5, 2025\n\n\nHarlow Malloc\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\n\nDec 2, 2025\n\n\nTristan O’Malley\n\n\n\n\n\nNo matching items"
-  },
-  {
     "objectID": "posts/index.html",
     "href": "posts/index.html",
     "title": "Vartia.ai",
     "section": "",
-    "text": "vartia\n  Book a Consult\n\n\n\n\n\n\n\n\nExplore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)\n\n\n\n\n\n\n\n\nDec 15, 2025\n\n\nBrian Williams\n\n\n\n\n\n\n\n\n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\n\nDec 2, 2025\n\n\nTristan O’Malley\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "posts/draft.html",
-    "href": "posts/draft.html",
-    "title": "Vartia.ai",
-    "section": "",
-    "text": "vartia\n  Book a Consult\n\n\n\n\n\nMemory-related bugs are some of the most common and costly security failures in software.\nThe industry has been burned by these bugs since before the Morris worm incident made headlines in 1988. Here we are 37 years later and the same class of security bugs are still happening today. If we want to fix these bugs we first need to understand them: what kind of bug it is, how it’s triggered, how it’s fixed, and how to detect the next one before it ships. We need to be able to classify them.’\nClassifying software bugs is harder than I thought.\nI assumed that state of the art large language models (LLMs) would excel at the task. There’s a public database of security vulnerabilities from NIST (the CVE database), and each entry includes natural-language descriptions, code snippets, and an assigned weakness type (CWE). I thought I could give an LLM the code and ask it to classify the weakness into one of the known categories. These model are good at writing code, they should be able to spot these bugs.\nThey failed to classify the weakness in spectacular fashion. Less than 50% accuracy.\nIt’s not the models fault\nI dug deep into the data and tried to understand how the labels were assigned. Turns out that the labeling is inconstant. Inconstant labeling is not surprising, labeling any dataset is difficult. CWEs are assigned manually by in a community-driven analysis process. I should not have been expecting fine grained CWEs to be consistent. The definitions were not precise enough, many CVEs had multiple bugs and some didn’t match the code. The ground truth isn’t there to be learned.\nThe existing labels weren’t good enough, let’s make our own!\nBottom-Up Classification\nSince the existing CWE labels were not defined as clearly, I decided to try to make a bottom-up classification system. The idea is to make embeddings from the sections of code that contained the bugs, then cluster the issues and give them labels. The rules for labeling could then be created and ideally more consistent than the existing ones.\nWhat are Embeddings?\nThe central questions is, “Are these two bug the same kind of bug?” What is needed is a way to compress the error into its essential characteristics. We don’t care about all the extraneous details, just the weakness. We want similar bugs to be compressed into the same space.\nImagine you wanted to decide whether two vulnerabilities are the same kind of mistake. One way to do that is to invent a bunch of axes ahead of time:\nDoes it read memory out of bounds?Does it write memory out of bounds?Is there a missing bounds check?Is the pointer uninitialized?Does the buffer size depend on untrusted input?\nIf you had hundreds or thousands of these axes, you can map every bug into a coordinate space.\nHowever this has a large number of drawbacks. You have to define the axes ahead of time. If you don’t include some or define others poorly the system falls apart. It’s labor intense in the extreme to get this process right.\nEmbeddings flip this process around. We start with the space and define the axes later.\nThe model learns to define the axes by the similarities in the code between the pairs of similar bugs.\nThat’s what embeddings give us: a bottom-up, data-driven map of software weaknesses, instead of a brittle top-down taxonomy.\nBut to train embeddings, we need a reliable way to say when two bugs are the same.\nHow Do We Know When Two Bugs Are the Same?\nThe question is now, how do we get pairs of bug that are the same? We could manually compare all the bug and try to sort them. Obviously this would be a laborious process. Rather we can use the idea of “LLM as a Judge”(paper citation).\nThe idea is to ask a large language model directly:\n“Here are two pieces of buggy code. Are these the same kind of bug?”\nMy instincts are that LLMs have a far easier time doing this than assigning CWE labels. If you give them the right prompt, they can look at the mechanics of each function and tell you whether both exhibit, say, an out-of-bounds write or an uninitialized read.\nSo the natural plan was: use an LLM as a judge to score each pair of bugs on similarity.\nBut there was one problem.\nThe combinatorial explosion\nIf you have 1,000 bugs, comparing every pair means one million comparisons. Even at a few cents per model call, that becomes expensive, slow, and unwieldy— and most of those comparisons are pointless. Bugs from different domains or different weakness families will obviously not match. We don’t need an AI to tell us that."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
-    "href": "posts/post-with-code/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t",
-    "text": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t\nI began by running a simple baseline experiment: test whether state-of-the-art LLMs can correctly classify real security vulnerabilities.\nThe source data was the Common Vulnerabilities and Exposures (CVE) database. CVEs include natural-language descriptions, one or more Common Weakness Enumeration (CWE) labels, and often the code patch that fixed the issue.\nI downloaded roughly 20 years of CVE data from NIST and filtered for memory-safety-related CWEs. CVEs with available GitHub commits were converted into a dataset of vulnerable functions paired with their assigned weaknesses.\nThe result:\n\n~1300 CVEs\n79% had a single CWE label\n\nThe task given to the LLMs was intentionally simple:\n\nGiven the vulnerable code and its patch, return one or more CWEs that describe the weakness.\n\nIf the model returned any CWE listed in the CVE record, it was considered correct. Hierarchical matching was not allowed. This was meant to be a loose baseline, not a strict evaluation.\nI assumed modern LLMs would perform extremely well.\nThey did not.\nFrontier models returned a correct CWE less than 50% of the time."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#are-we-asking-the-wrong-question",
-    "href": "posts/post-with-code/index.html#are-we-asking-the-wrong-question",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "Are We Asking the Wrong Question?",
-    "text": "Are We Asking the Wrong Question?\nThis failure raises a deeper question:\n\nAre top-down CWE taxonomies compatible with code-centric evaluation at all?\n\nAfter digging into the dataset, the answer became clear: the problem is not the models—it is the labels.\nCWEs are assigned manually through a community-driven process spanning decades. That process is valuable, but it struggles to produce consistent, fine-grained, code-level classifications.\nThis is not an argument that CWEs are incorrect or useless.\nIt is an argument that they are misaligned with the task of classifying vulnerabilities directly from code."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#look-at-your-data",
-    "href": "posts/post-with-code/index.html#look-at-your-data",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "Look at Your Data",
-    "text": "Look at Your Data\nTo understand what was happening, I looked at the label distribution.\n\n\n\nHistogram of CVEs by CWE label\n\n\nThe dataset is extremely imbalanced. A small number of CWEs dominate the majority of examples.\nNext, I examined where the model was wrong.\n\n\n\nMisclassification matrix for CWE prediction\n\n\nThis matrix only includes error cases—situations where the model’s prediction did not match any of the CVE’s assigned CWEs. Each cell shows the count of misclassified CVEs, with the dataset label on the row and the model prediction on the column.\nThe errors are not random. They cluster.\nCWE-119 is both:\n\nthe most over-predicted label, and\nthe most under-predicted ground-truth label\n\nThis makes sense. CWE-119 (“Improper Restriction of Operations within the Bounds of a Memory Buffer”) is a parent of CWE-120, CWE-125, CWE-787, and a grandparent of others like CWE-121 and CWE-122.\nIt acts as a semantic catch-all."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#when-two-labels-are-both-correct",
-    "href": "posts/post-with-code/index.html#when-two-labels-are-both-correct",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "When Two Labels Are Both Correct",
-    "text": "When Two Labels Are Both Correct\nConsider CWE-122 (Heap-based Buffer Overflow) and CWE-787 (Out-of-Bounds Write).\nFor CVE-2025-54949, the official label is CWE-122.\nThe LLM predicted CWE-787.\nThe code uses memcpy to copy data into a heap buffer without verifying that the buffer has sufficient space.\nBoth labels are correct.\n\nThe mechanism is an out-of-bounds write.\nThe consequence is a heap-based buffer overflow.\n\nThe CWE hierarchy forces a choice. The code does not."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#why-bottom-up-classification-matters",
-    "href": "posts/post-with-code/index.html#why-bottom-up-classification-matters",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "Why Bottom-Up Classification Matters",
-    "text": "Why Bottom-Up Classification Matters\nThe goal was never to reproduce CWE assignments.\nThe goal was to classify vulnerabilities as they manifest in code.\nTop-down labeling forces models to guess which level of abstraction the human annotator chose. That information is often absent from the code itself.\nTo build a code-centric evaluation system, weakness categories must be derived bottom-up, from concrete failure modes observed in real code—not imposed from a predefined hierarchy."
-  },
-  {
-    "objectID": "posts/post-with-code/index.html#whats-next",
-    "href": "posts/post-with-code/index.html#whats-next",
-    "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
-    "section": "What’s Next",
-    "text": "What’s Next\nIn the next article, I’ll describe how I built a bottom-up taxonomy for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.\nThat taxonomy is the foundation of OOBench."
+    "text": "vartia\n  Book a Consult\n\n\n\n\n\n\n\n\nExplore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)\n\n\n\n\n\n\n\n\nDec 15, 2025\n\n\nBrian Williams\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/oobench1/index.html",
@@ -145,5 +61,19 @@
     "title": "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)",
     "section": "What’s Next",
     "text": "What’s Next\nIn the next article, I’ll describe how I built a bottom-up taxonomy for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.\nThat taxonomy is the foundation of OOBench."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Vartia.ai",
+    "section": "",
+    "text": "Machine Learning Engineering\n\n    \n      BLOG\n      BOOK A CONSULT"
+  },
+  {
+    "objectID": "index.html#latest-articles",
+    "href": "index.html#latest-articles",
+    "title": "Vartia.ai",
+    "section": "Latest Articles",
+    "text": "Latest Articles"
   }
 ]

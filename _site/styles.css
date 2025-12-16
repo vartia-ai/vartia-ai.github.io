@@ -18,12 +18,10 @@ body, html {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
-  min-height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: 'Inter', sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .quarto-container,
@@ -40,14 +38,17 @@ main#quarto-document-content {
   width: 100%;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .stage {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  min-height: 72vh;
+  height: auto;
+  padding: 3rem 0 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -187,8 +188,37 @@ h1, h2, h3, h4, h5, h6, .title {
   color: var(--text) !important;
 }
 
+.quarto-listing .listing-title a {
+  color: #FFFFFF !important;
+}
+
 .listing-description {
   color: var(--text-muted) !important;
+}
+
+.quarto-listing .listing-description a {
+  color: var(--text) !important;
+}
+
+.home-listing {
+  width: min(1100px, 92vw);
+  margin: 2rem auto 1rem;
+  padding: 0;
+}
+
+.home-listing h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+body.home .quarto-listing-container-default {
+  width: min(1100px, 92vw);
+  margin: 0 auto 6rem;
+  padding: 2rem 1.5rem;
+  background: rgba(12, 12, 12, 0.9);
+  border: 1px solid var(--grid);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
 /* Custom Nav Header */
@@ -237,8 +267,50 @@ h1, h2, h3, h4, h5, h6, .title {
   transform: translateY(-1px);
 }
 
+/* Posts: hide built-in header metadata and show it in footer instead */
+header.quarto-title-block .quarto-title-meta,
+#title-block-header .quarto-title-meta,
+.quarto-title-block .quarto-title-meta {
+  display: none !important;
+}
+
+.post-meta-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--grid);
+  color: var(--text-muted);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.post-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.post-meta-label {
+  color: var(--text-muted);
+}
+
+.post-meta-value {
+  color: var(--text);
+}
+
 /* Hide default Quarto title block if present */
 .quarto-title {
   display: none;
 }
 
+/* Home page has an empty title block that adds scroll */
+#quarto-content.page-layout-full #title-block-header {
+  display: none;
+}
+
+/* Quarto reserves a bottom row; remove it for the full-bleed home page */
+#quarto-content.page-layout-full.page-rows-contents {
+  grid-template-rows: [content-top] minmax(max-content, 1fr) [content-bottom] 0 [page-bottom];
+}
