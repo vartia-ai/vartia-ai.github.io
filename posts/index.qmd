@@ -1,0 +1,18 @@
+---
+page-layout: full
+format:
+  html:
+    toc: false
+listing:
+  contents:
+    - .
+  sort: "date desc"
+---
+
+
+
+<div style="margin-top: 80px;">
+  <!-- Spacer for fixed header -->
+</div>
+
+Explore the latest posts.

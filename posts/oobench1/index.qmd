@@ -1,0 +1,127 @@
+---
+title: "OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)"
+author: "Brian Williams"
+date: "2025-12-15"
+categories:
+  - CVE
+  - Software Weakness
+  - Memory Vulnerabilities
+image: image.jpg
+---
+
+# Learning Software Weaknesses From the Ground Up
+
+Building a CVE embedding system with real and synthetic bugs.
+
+Memory-related bugs are some of the most common and costly security failures in software.  
+The industry has been burned by these bugs since before the Morris Worm incident made headlines in 1988. Here we are, 37 years later, and the same class of security bugs are still happening today.
+
+To prevent these vulnerabilities, we first need to understand them: what the failure mode is, what conditions trigger it, and how to prevent the next one from shipping. This requires a way to detect vulnerable code *and* evaluate the accuracy of our detectors.
+
+I am building **OOBench** to benchmark how well large language models (LLMs) can identify and classify memory safety vulnerabilities in C and C++.
+
+---
+
+## Classifying Vulnerabilities: The Easy Baseline That Wasn’t
+
+I began by running a simple baseline experiment: test whether state-of-the-art LLMs can correctly classify real security vulnerabilities.
+
+The source data was the **Common Vulnerabilities and Exposures (CVE)** database. CVEs include natural-language descriptions, one or more **Common Weakness Enumeration (CWE)** labels, and often the code patch that fixed the issue.
+
+I downloaded roughly 20 years of CVE data from NIST and filtered for memory-safety-related CWEs. CVEs with available GitHub commits were converted into a dataset of vulnerable functions paired with their assigned weaknesses.
+
+The result:
+
+- ~1300 CVEs
+- 79% had a *single* CWE label
+
+The task given to the LLMs was intentionally simple:
+
+> Given the vulnerable code and its patch, return one or more CWEs that describe the weakness.
+
+If the model returned *any* CWE listed in the CVE record, it was considered correct. Hierarchical matching was **not** allowed. This was meant to be a loose baseline, not a strict evaluation.
+
+I assumed modern LLMs would perform extremely well.
+
+They did not.
+
+Frontier models returned a correct CWE **less than 50% of the time**.
+
+---
+
+## Are We Asking the Wrong Question?
+
+This failure raises a deeper question:
+
+> Are top-down CWE taxonomies compatible with code-centric evaluation at all?
+
+After digging into the dataset, the answer became clear: **the problem is not the models—it is the labels.**
+
+CWEs are assigned manually through a community-driven process spanning decades. That process is valuable, but it struggles to produce consistent, fine-grained, *code-level* classifications.
+
+This is not an argument that CWEs are incorrect or useless.  
+It *is* an argument that they are misaligned with the task of classifying vulnerabilities directly from code.
+
+---
+
+## Look at Your Data
+
+To understand what was happening, I looked at the label distribution.
+
+![Histogram of CVEs by CWE label](histo.png){fig-cap="Figure 1: Distribution of memory-safety CVEs by CWE label."}
+
+The dataset is extremely imbalanced. A small number of CWEs dominate the majority of examples.
+
+Next, I examined where the model was *wrong*.
+
+![Misclassification matrix for CWE prediction](error_matrix.png){fig-cap="Figure 2: Misclassification matrix showing where model predictions did not match any assigned CWE."}
+
+This matrix only includes **error cases**—situations where the model’s prediction did not match *any* of the CVE’s assigned CWEs. Each cell shows the count of misclassified CVEs, with the dataset label on the row and the model prediction on the column.
+
+The errors are not random. They cluster.
+
+CWE-119 is both:
+
+- the most **over-predicted** label, and
+- the most **under-predicted** ground-truth label
+
+This makes sense. CWE-119 (“Improper Restriction of Operations within the Bounds of a Memory Buffer”) is a *parent* of CWE-120, CWE-125, CWE-787, and a *grandparent* of others like CWE-121 and CWE-122.
+
+It acts as a semantic catch-all.
+
+---
+
+## When Two Labels Are Both Correct
+
+Consider CWE-122 (Heap-based Buffer Overflow) and CWE-787 (Out-of-Bounds Write).
+
+For **CVE-2025-54949**, the official label is CWE-122.  
+The LLM predicted CWE-787.
+
+The code uses `memcpy` to copy data into a heap buffer without verifying that the buffer has sufficient space.
+
+Both labels are correct.
+
+- The *mechanism* is an out-of-bounds write.
+- The *consequence* is a heap-based buffer overflow.
+
+The CWE hierarchy forces a choice. The code does not.
+
+---
+
+## Why Bottom-Up Classification Matters
+
+The goal was never to reproduce CWE assignments.  
+The goal was to classify vulnerabilities *as they manifest in code*.
+
+Top-down labeling forces models to guess which level of abstraction the human annotator chose. That information is often absent from the code itself.
+
+To build a code-centric evaluation system, weakness categories must be derived **bottom-up**, from concrete failure modes observed in real code—not imposed from a predefined hierarchy.
+
+---
+
+## What’s Next
+
+In the next article, I’ll describe how I built a **bottom-up taxonomy** for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.
+
+That taxonomy is the foundation of OOBench.

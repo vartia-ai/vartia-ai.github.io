@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VARTIA</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #080808;
+      --grid: rgba(255, 255, 255, 0.08);
+      --grid-fine: rgba(255, 255, 255, 0.02);
+      --text: #E5E5E5;
+      --text-muted: #B3B3B3;
+      --panel: #050505;
+      --outline: #F5F5F5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid {
+      position: absolute;
+      inset: -5%;
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+        linear-gradient(var(--grid-fine) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px);
+      background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
+      opacity: 0.55;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .noise {
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.6rem;
+      padding: 2rem;
+    }
+
+    .logo {
+      width: min(65vw, 520px);
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
+    }
+
+    .logo path {
+      fill: none;
+      stroke: #F4F4F4;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(1.4rem, 2vw, 2.4rem);
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.4rem;
+      margin-top: 1rem;
+    }
+
+    .cta {
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.9rem, 1.4vw, 1.4rem);
+      letter-spacing: 0.14em;
+      padding: 12px 32px;
+      border-radius: 12px;
+      border: 2px solid var(--outline);
+      background: linear-gradient(180deg, #0C0C0C 0%, #070707 100%);
+      color: #F8F8F8;
+      min-width: min(68vw, 320px);
+      text-align: center;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.65);
+      border-color: #FFFFFF;
+    }
+
+    .cta:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+    }
+
+    @media (max-width: 700px) {
+      .logo { width: 90vw; }
+      .cta { min-width: 90vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid"></div>
+    <div class="noise"></div>
+
+    <div class="hero">
+      <svg class="logo" viewBox="0 0 320 90" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <g transform="scale(0.25)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M244.469837,4.3590462 C254.270544,8.43013988 257.128919,16.1512649 253.044961,27.5224214 L143.478708,266.702639 C138.387367,273.669216 132.98728,277.152505 127.278447,277.152505 C121.569614,277.152505 115.869192,273.669216 110.177182,266.702639 L2.40106241,27.5224214 C0.850602285,14.8838111 3.79556456,7.16268606 11.2359492,4.3590462 C30.4672654,-2.88757972 36.603593,16.1047551 36.603593,16.1047551 L127.278447,220.49909 L220.905685,12.6744084 C226.814412,3.05973993 234.669129,0.287952518 244.469837,4.3590462 Z M347.470901,54.9758998 C355.62656,54.9758998 361.536806,59.5159078 363.178356,63.4144696 C364.672209,66.9622643 436.232023,221.087837 448.81066,252.426287 C452.477442,261.56172 449.500878,270.478443 441.19614,274.464592 C440.250205,274.918626 439.254588,275.264508 438.227767,275.510406 C430.239714,277.423344 421.467411,276.176863 417.317255,268.655258 C414.550484,263.640854 391.268366,210.579457 347.470901,109.471067 C302.606333,211.860458 278.978336,264.921854 276.586908,268.655258 C272.999766,274.255362 265.134157,279.626847 254.820369,275.937138 C244.50658,272.247429 241.826799,260.088998 243.16669,254.664832 C243.791295,252.136296 262.334335,211.630632 282.162953,168.699462 C283.414306,165.990143 284.670779,163.271164 285.928192,160.55146 C286.790587,158.686154 287.653424,156.820507 288.515355,154.957402 L289.807402,152.165012 C310.033535,108.458719 329.386504,66.9522364 330.363069,65.0575613 C332.422662,61.0616611 339.315241,54.9758998 347.470901,54.9758998 Z M925.155531,58.0256745 C935.041637,58.0256745 943.30363,64.3826827 943.30363,73.0354401 C943.30363,81.6881975 943.30363,257.544464 943.30363,265.167346 C943.30363,272.790229 933.723278,279.285225 925.194061,279.285225 C916.664844,279.285225 907.983741,271.884974 907.983741,265.167346 C907.983741,258.449719 907.084492,79.6013247 907.084492,73.0354401 C907.084492,66.4695555 915.269425,58.0256745 925.155531,58.0256745 Z M1107.28362,56.8518938 C1115.43928,56.8518938 1121.34952,61.3919019 1122.99107,65.2904636 C1124.48493,68.8382583 1196.04474,222.963831 1208.62338,254.302281 C1212.29016,263.437714 1209.3136,272.354437 1201.00886,276.340586 C1200.06292,276.79462 1199.06731,277.140502 1198.04048,277.3864 C1190.05243,279.299338 1181.28013,278.052857 1177.12997,270.531252 C1174.3632,265.516848 1151.08108,212.455451 1107.28362,111.347061 C1062.41905,213.736452 1038.79105,266.797848 1036.39963,270.531252 C1032.81248,276.131357 1024.94688,281.502841 1014.63309,277.813132 C1004.3193,274.123423 1001.63952,261.964992 1002.97941,256.540826 C1003.60401,254.01229 1022.14705,213.506626 1041.97567,170.575456 C1043.22702,167.866137 1044.4835,165.147158 1045.74091,162.427454 C1067.30079,115.794802 1089.13689,68.9491671 1090.17579,66.9335554 C1092.23538,62.9376552 1099.12796,56.8518938 1107.28362,56.8518938 Z M526.051897,277.152505 C535.903625,277.152505 544.098498,269.618917 544.098498,260.991672 C544.098498,255.240175 544.098498,198.190454 544.098498,89.8425095 C581.664985,89.8425095 602.781639,89.8425095 607.44846,89.8425095 C614.448691,89.8425095 621.377881,82.657411 621.377881,73.815839 C621.377881,64.974267 614.757143,57.5671472 607.906113,57.5671472 C601.055083,57.5671472 547.66625,57.5671472 528.310503,57.5671472 C508.954757,57.5671472 507.713305,70.3198585 507.713305,73.815839 C507.713305,77.3118195 507.713305,256.315702 507.713305,262.546163 C507.713305,268.776625 516.200168,277.152505 526.051897,277.152505 Z M684.010668,58.0256745 C690.821492,58.0256745 837.479617,58.0256745 846.938084,58.0256745 C856.396551,58.0256745 861.728594,65.6474291 861.728594,73.9562904 C861.728594,82.2651517 855.832447,90.2235887 846.938084,90.2235887 C841.008509,90.2235887 819.827945,90.4163769 783.396392,90.8019531 C783.396392,199.26657 783.396392,256.055103 783.396392,261.167552 C783.396392,268.836226 778.58063,277.854718 766.728736,277.854718 C754.876842,277.854718 746.95029,268.836226 746.95029,261.167552 C746.95029,256.055103 746.95029,199.26657 746.95029,90.8019531 C711.342743,90.8019531 690.865366,90.8019531 685.518162,90.8019531 C677.497355,90.8019531 669.733779,81.8742518 669.733779,73.9562904 C669.733779,66.038329 677.199844,58.0256745 684.010668,58.0256745 Z"></path>
+        </g>
+      </svg>
+
+      <div class="subtitle">Machine Learning Engineering</div>
+
+      <div class="cta-row">
+        <a class="cta" href="#">BLOG</a>
+        <a class="cta" href="#">BOOK A CONSULT</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
