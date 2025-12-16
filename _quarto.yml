@@ -14,7 +14,9 @@ format:
       - cosmo
       - brand
     css: styles.css
-    include-in-header: includes/gtm-head.html
+    include-in-header:
+      - includes/gtm-head.html
+      - includes/calendly-head.html
     include-before-body: includes/gtm-body.html
     template-partials:
       - templates/nav-before-body.ejs

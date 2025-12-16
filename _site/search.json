@@ -102,7 +102,7 @@
     "href": "posts/index.html",
     "title": "Vartia.ai",
     "section": "",
-    "text": "vartia\n  \n     Book a Consult\n  \n\n\n\n\n\n\n\n\nExplore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ (1 of 4)\n\n\n\n\n\n\n\n\nDec 15, 2025\n\n\nBrian Williams\n\n\n\n\n\nNo matching items"
+    "text": "vartia\n  \n     Book a Consult\n  \n\n\n\n\n\n\n\n\nExplore the latest posts.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++\n\n\n\n\n\n\n\n\nDec 15, 2025\n\n\nBrian Williams\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/oobench1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
@@ -147,17 +147,17 @@
     "text": "What’s Next\nIn the next article, I’ll describe how I built a bottom-up taxonomy for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.\nThat taxonomy is the foundation of OOBench."
   },
   {
-    "objectID": "index.html#latest-articles",
-    "href": "index.html#latest-articles",
-    "title": "Vartia.ai",
-    "section": "Latest Articles",
-    "text": "Latest Articles"
-  },
-  {
     "objectID": "book.html",
     "href": "book.html",
     "title": "Book a Consult",
     "section": "",
     "text": "Book a Consult\nSchedule time with Vartia.ai using the embed below."
+  },
+  {
+    "objectID": "index.html#latest-articles",
+    "href": "index.html#latest-articles",
+    "title": "Vartia.ai",
+    "section": "Latest Articles",
+    "text": "Latest Articles"
   }
 ]
