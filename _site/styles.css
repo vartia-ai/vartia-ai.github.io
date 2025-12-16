@@ -175,6 +175,13 @@ h1, h2, h3, h4, h5, h6, .title {
   font-family: 'Inter', sans-serif;
 }
 
+/* Callouts / blockquotes */
+blockquote, .blockquote {
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 1.08em;
+}
+
 /* Quarto Listing Styles */
 .quarto-listing {
   color: var(--text);
