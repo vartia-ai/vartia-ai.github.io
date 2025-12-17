@@ -2,13 +2,13 @@
   {
     "listing": "/posts/index.html",
     "items": [
-      "/posts/oobench1/index.html"
+      "/posts/oob_bench1/index.html"
     ]
   },
   {
     "listing": "/index.html",
     "items": [
-      "/posts/oobench1/index.html"
+      "/posts/oob_bench1/index.html"
     ]
   }
 ]

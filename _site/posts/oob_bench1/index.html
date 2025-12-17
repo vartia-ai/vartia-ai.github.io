@@ -9,7 +9,7 @@
 <meta name="author" content="Brian Williams">
 <meta name="dcterms.date" content="2025-12-15">
 
-<title>OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ – Vartia.ai</title>
+<title>OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++ – Vartia.ai</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -76,7 +76,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">OOBench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++</h1>
+      <h1 class="title">OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">CVE</div>
                 <div class="quarto-category">Software Weakness</div>
@@ -134,12 +134,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 
-<section id="oobench-a-bottom-up-classification-of-memory-safety-vulnerabilities-in-c-and-c" class="level1">
-<h1>OOBench: A bottom-up classification of memory safety vulnerabilities in C and C++</h1>
+<section id="oob-bench-a-bottom-up-classification-of-memory-safety-vulnerabilities-in-c-and-c" class="level1">
+<h1>OOB Bench: A bottom-up classification of memory safety vulnerabilities in C and C++</h1>
 <p>Memory-related bugs are some of the most common and costly security failures in software.<br>
 The industry has been burned by these bugs since before the Morris Worm incident made headlines in 1988. Here we are, 37 years later, and the same class of security bugs are still happening today.</p>
 <p>To prevent these vulnerabilities, we first need to understand them: what the failure mode is, what conditions trigger it, and how to prevent the next one from shipping. This requires a way to detect vulnerable code <em>and</em> evaluate the accuracy of our detectors.</p>
-<p>I am building <strong>OOBench</strong> to benchmark how well large language models (LLMs) can identify and classify memory safety vulnerabilities in C and C++.</p>
+<p>I am building <strong>OOB Bench</strong> to benchmark how well large language models (LLMs) can identify and classify memory safety vulnerabilities in C and C++.</p>
 <hr>
 <section id="classifying-vulnerabilities-the-easy-baseline-that-wasnt" class="level2">
 <h2 class="anchored" data-anchor-id="classifying-vulnerabilities-the-easy-baseline-that-wasnt">Classifying Vulnerabilities: The Easy Baseline That Wasn’t</h2>
@@ -186,16 +186,16 @@ It <em>is</em> an argument that they are misaligned with the task of classifying
 <p>Next, I examined where the model was <em>wrong</em>.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="error_matrix.png" class="img-fluid figure-img"></p>
-<figcaption>Misclassification matrix for CWE prediction</figcaption>
+<p><img src="confusion_matrix.png" class="img-fluid figure-img"></p>
+<figcaption>Confusion matrix for CWE prediction</figcaption>
 </figure>
 </div>
-<p>This matrix only includes <strong>error cases</strong>—situations where the model’s prediction did not match <em>any</em> of the CVE’s assigned CWEs. Each cell shows the count of misclassified CVEs, with the dataset label on the row and the model prediction on the column.</p>
+<p>This confusion matrix is a comparison of the dataset label and the LLM predicted lable. Correct predictions are found on the diagnal. All of the non-diagnal cells show a count of that type of misprediction.</p>
 <p>The errors are not random. They cluster.</p>
 <p>CWE-119 is both:</p>
 <ul>
-<li>the most <strong>over-predicted</strong> label, and</li>
-<li>the most <strong>under-predicted</strong> ground-truth label</li>
+<li>the most <strong>over-predicted</strong> label (predicted as 119 when not)</li>
+<li>the most <strong>under-predicted</strong> label (predicted as not 119 when it was)</li>
 </ul>
 <p>This makes sense. CWE-119 (“Improper Restriction of Operations within the Bounds of a Memory Buffer”) is a <em>parent</em> of CWE-120, CWE-125, CWE-787, and a <em>grandparent</em> of others like CWE-121 and CWE-122.</p>
 <p>It acts as a semantic catch-all.</p>
@@ -204,8 +204,7 @@ It <em>is</em> an argument that they are misaligned with the task of classifying
 <section id="when-two-labels-are-both-correct" class="level2">
 <h2 class="anchored" data-anchor-id="when-two-labels-are-both-correct">When Two Labels Are Both Correct</h2>
 <p>Consider CWE-122 (Heap-based Buffer Overflow) and CWE-787 (Out-of-Bounds Write).</p>
-<p>For <strong>CVE-2025-54949</strong>, the official label is CWE-122.<br>
-The LLM predicted CWE-787.</p>
+<p>For <strong>CVE-2025-54949</strong>, the official label is CWE-122. The LLM predicted CWE-787.</p>
 <p>The code uses <code>memcpy</code> to copy data into a heap buffer without verifying that the buffer has sufficient space.</p>
 <p>Both labels are correct.</p>
 <ul>
@@ -226,7 +225,7 @@ The goal was to classify vulnerabilities <em>as they manifest in code</em>.</p>
 <section id="whats-next" class="level2">
 <h2 class="anchored" data-anchor-id="whats-next">What’s Next</h2>
 <p>In the next article, I’ll describe how I built a <strong>bottom-up taxonomy</strong> for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.</p>
-<p>That taxonomy is the foundation of OOBench.</p>
+<p>That taxonomy is the foundation of OOB Bench.</p>
 
 
 </section>

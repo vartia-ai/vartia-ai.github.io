@@ -20,5 +20,6 @@ format:
     include-before-body: includes/gtm-body.html
     template-partials:
       - templates/nav-before-body.ejs
+    mathjax: false
 resources:
   - site_libs

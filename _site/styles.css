@@ -230,15 +230,24 @@ body.home .quarto-listing-container-default {
 
 /* Custom Nav Header */
 .nav-header {
-  padding: 2rem;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  z-index: 1000;
   width: 100%;
-  z-index: 10;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+  padding-left: calc(env(safe-area-inset-left) + 1.25rem);
+  padding-right: calc(env(safe-area-inset-right) + 1.25rem);
+  background: rgba(8, 8, 8, 0.72);
+  border-bottom: 1px solid var(--grid);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .nav-logo {
@@ -272,6 +281,16 @@ body.home .quarto-listing-container-default {
   background: rgba(255, 255, 255, 0.1);
   border-color: #FFFFFF;
   transform: translateY(-1px);
+}
+
+/* Posts: keep fixed header visible while content scrolls under it */
+main#quarto-document-content.quarto-banner-title-block {
+  padding-top: calc(env(safe-area-inset-top) + 4rem);
+}
+
+/* Posts: we render our own in-article H1; remove the empty title banner */
+header#title-block-header.quarto-title-block.default.page-columns.page-full {
+  display: none;
 }
 
 /* Posts: hide built-in header metadata and show it in footer instead */
