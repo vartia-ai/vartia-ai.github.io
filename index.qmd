@@ -14,6 +14,11 @@ listing:
 ---
 
 ```{=html}
+<div class="nav-header">
+  <a href="./" class="nav-logo">vartia</a>
+  <a href="book.html" class="nav-cta">Book a Consult</a>
+</div>
+
 <div class="stage">
   <div class="grid"></div>
   <div class="noise"></div>
@@ -26,12 +31,6 @@ listing:
     </svg>
 
     <div class="subtitle">Machine Learning Engineering</div>
-
-    <div class="cta-row">
-      <a class="cta" href="posts/index.html">BLOG</a>
-      <a class="cta" href="book.html">BOOK A CONSULT</a>
-      
-    </div>
   </div>
 </div>
 ```

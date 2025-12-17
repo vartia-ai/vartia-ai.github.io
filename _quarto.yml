@@ -1,5 +1,10 @@
 project:
   type: website
+  render:
+    - index.qmd
+    - about.qmd
+    - book.qmd
+    - "posts/*/index.qmd"
 
 website:
   description: "Custom LLM pipelines for real problems: embeddings, evaluation frameworks, synthetic data generation, and domain-specific retrieval systems."

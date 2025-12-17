@@ -1,11 +1,5 @@
 [
   {
-    "listing": "/posts/index.html",
-    "items": [
-      "/posts/oob_bench1/index.html"
-    ]
-  },
-  {
     "listing": "/index.html",
     "items": [
       "/posts/oob_bench1/index.html"
