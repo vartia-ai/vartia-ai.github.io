@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="631px" height="99px" viewBox="0 0 631 99" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Group 10</title>
+    <g id="Page-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-10" transform="translate(2, 1)" stroke="#555555" stroke-width="2">
+            <rect id="Rectangle" fill="#ECECEC" x="346.5" y="1" width="94" height="19"></rect>
+            <rect id="Rectangle" fill="#ECECEC" x="466" y="1" width="22" height="95"></rect>
+            <polygon id="Path-3" fill="#ECECEC" points="0 0 25 0 70 97 44 97"></polygon>
+            <polygon id="Path-4" fill="#ECECEC" points="60 63.8150847 89 -9.68092745e-16 114 0 72.7201297 91.437471"></polygon>
+            <polygon id="Path-5" fill="#ECECEC" points="144 0 169 0 213 97 188 97"></polygon>
+            <polygon id="Path-6" fill="#ECECEC" points="141 5.8455055 99 97 124 97 153.862427 33.4995245"></polygon>
+            <polygon id="Path-5" fill="#ECECEC" points="557.5 0 582.5 0 626.5 97 601.5 97"></polygon>
+            <polygon id="Path-6" fill="#ECECEC" points="554.5 5.8455055 512.5 97 537.5 97 567.362427 33.4995245"></polygon>
+            <polygon id="Path-7" fill="#ECECEC" points="227 1.13686838e-13 250 1.13686838e-13 250 97 227 97"></polygon>
+            <path d="M255,0 C281.462595,0 298.42831,0 305.897145,0 C314.783594,2.27201958 321.450188,8.3304307 325.896927,18.1752333 L325.896927,48.5 C324.424248,60.230184 316.818631,67.5509665 303.080076,70.4623475 C310.154674,78.4209033 317.76029,87.2667874 325.896927,97 L295.313367,97 L271.489542,70.4623475 L255,70.4623475 L255,46.9328825 C276.697772,46.9328825 290.135561,46.9328825 295.313367,46.9328825 C301.199394,45.0975995 303.788298,41.1104134 303.080076,34.9713243 C304.009727,29.1684792 301.420823,25.2322569 295.313367,23.1626575 C290.135561,23.1626575 276.697772,23.1626575 255,23.1626575 L255,0 Z" id="Path-8" fill="#ECECEC"></path>
+            <rect id="Rectangle" fill="#E4E4E4" x="383" y="29" width="21" height="67"></rect>
+        </g>
+    </g>
+</svg>
