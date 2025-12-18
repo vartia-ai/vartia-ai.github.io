@@ -12,6 +12,8 @@ include-after-body: ../footer_meta.html
 
 # OOB Bench: A bottom-up classification of memory safety vulnerabilities in C and C++
 
+![Illustration of a glowing cube in a grid](article_hero.jpg){.article-hero}
+
 Memory-related bugs are some of the most common and costly security failures in software.  
 The industry has been burned by these bugs since before the Morris Worm incident made headlines in 1988. Here we are, 37 years later, and the same class of security bugs are still happening today.
 Memory safety vulnerabilities consistently make up a large fraction of high-severity CVEs year after year, across operating systems, browsers, databases, and embedded systems.

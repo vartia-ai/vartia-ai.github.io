@@ -228,6 +228,56 @@ body.home .quarto-listing-container-default {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
+/* Home listing: put thumbnails on the left */
+body.home .quarto-post.image-right {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+body.home .quarto-post.image-right .thumbnail {
+  order: 2;
+  flex: 0 0 160px;
+  max-width: 160px;
+}
+
+body.home .quarto-post.image-right .body {
+  order: 1;
+  flex: 1 1 auto;
+}
+
+body.home .quarto-post.image-right .metadata {
+  order: 0;
+  flex: 0 0 140px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+body.home .quarto-post.image-right .metadata a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  body.home .quarto-post.image-right {
+    flex-direction: column;
+  }
+
+  body.home .quarto-post.image-right .thumbnail {
+    width: 100%;
+    max-width: none;
+  }
+
+  body.home .quarto-post.image-right .metadata {
+    width: 100%;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
 /* Custom Nav Header */
 .nav-header {
   position: fixed;
@@ -251,16 +301,17 @@ body.home .quarto-listing-container-default {
 }
 
 .nav-logo {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1.2rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--text);
   text-decoration: none;
-  letter-spacing: -0.02em;
 }
 
-.nav-logo:hover {
-  color: #fff;
+.nav-logo img {
+  display: block;
+  height: 22px;
+  width: auto;
 }
 
 .nav-cta {
@@ -281,6 +332,15 @@ body.home .quarto-listing-container-default {
   background: rgba(255, 255, 255, 0.1);
   border-color: #FFFFFF;
   transform: translateY(-1px);
+}
+
+/* Home: hide nav logo and right-align CTA */
+body.home .nav-logo {
+  display: none;
+}
+
+body.home .nav-header {
+  justify-content: flex-end;
 }
 
 /* Posts: keep fixed header visible while content scrolls under it */
@@ -324,6 +384,14 @@ header.quarto-title-block .quarto-title-meta,
 
 .post-meta-value {
   color: var(--text);
+}
+
+.article-hero {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  margin: 1.5rem 0;
+  display: block;
 }
 
 /* Hide default Quarto title block if present */

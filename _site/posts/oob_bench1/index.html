@@ -67,6 +67,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 <link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../styles/site-background.css">
 </head>
 
 <body class="fullcontent quarto-light">
@@ -124,7 +125,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <noscript id="gtm-noscript"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 <div class="nav-header">
-  <a href="../../" class="nav-logo">vartia</a>
+  <a href="../../" class="nav-logo">
+    <img src="../../assets/vartia_logo.svg" alt="Vartia logo">
+  </a>
   <a href="../../book.html" class="nav-cta">
      Book a Consult
   </a>
@@ -136,6 +139,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 <section id="oob-bench-a-bottom-up-classification-of-memory-safety-vulnerabilities-in-c-and-c" class="level1">
 <h1>OOB Bench: A bottom-up classification of memory safety vulnerabilities in C and C++</h1>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="article_hero.jpg" class="article-hero img-fluid figure-img"></p>
+<figcaption>Illustration of a glowing cube in a grid</figcaption>
+</figure>
+</div>
 <p>Memory-related bugs are some of the most common and costly security failures in software.<br>
 The industry has been burned by these bugs since before the Morris Worm incident made headlines in 1988. Here we are, 37 years later, and the same class of security bugs are still happening today. Memory safety vulnerabilities consistently make up a large fraction of high-severity CVEs year after year, across operating systems, browsers, databases, and embedded systems. Despite decades of tooling and mitigation efforts, out-of-bounds accesses, use-after-free errors, and related defects remain among the most reliable ways to turn ordinary bugs into security exploits. To prevent these vulnerabilities, we first need to understand them: what the failure mode is, what conditions trigger it, and how to prevent the next one from shipping. This requires a way to detect vulnerable code <em>and</em> evaluate the accuracy of our detectors.</p>
 <p>I am building <strong>OOB Bench</strong> to benchmark how well large language models (LLMs) can identify and classify memory safety vulnerabilities in C and C++.</p>
