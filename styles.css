@@ -230,30 +230,34 @@ body.home .quarto-listing-container-default {
 
 /* Home listing: put thumbnails on the left */
 body.home .quarto-post.image-right {
-  display: flex;
+  display: flex !important;
+  flex-direction: row;
   gap: 1.5rem;
   align-items: center;
+  min-width: 0;
 }
 
 body.home .quarto-post.image-right .thumbnail {
-  order: 2;
+  order: 0 !important;
   flex: 0 0 160px;
   max-width: 160px;
 }
 
 body.home .quarto-post.image-right .body {
-  order: 1;
+  order: 1 !important;
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 body.home .quarto-post.image-right .metadata {
-  order: 0;
+  order: 2 !important;
   flex: 0 0 140px;
-  text-align: left;
+  text-align: right;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  align-items: flex-start;
+  align-items: flex-end;
+  flex-shrink: 0;
 }
 
 body.home .quarto-post.image-right .metadata a {
