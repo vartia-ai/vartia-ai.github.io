@@ -147,7 +147,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 </div>
 <p>Memory-related bugs are some of the most common and costly security failures in software.<br>
 The industry has been burned by these bugs since before the Morris Worm incident made headlines in 1988. Here we are, 37 years later, and the same class of security bugs are still happening today.</p>
-<p>Memory safety vulnerabilities consistently make up a large fraction of high-severity CVEs year after year, across operating systems, browsers, databases, and embedded systems. Despite decades of tooling and mitigation efforts, out-of-bounds accesses, use-after-free errors, and related defects remain among the most reliable ways to turn ordinary bugs into security exploits. To prevent these vulnerabilities, we first need to understand them: what the failure mode is, what conditions trigger it, and how to prevent the next one from shipping. This requires a way to detect vulnerable code <em>and</em> evaluate the accuracy of our detectors.</p>
+<p>Memory safety vulnerabilities consistently make up a large fraction of high-severity CVEs year after year, across operating systems, browsers, databases, and embedded systems. Despite decades of tooling and mitigation efforts, out-of-bounds accesses, use-after-free errors, and related defects remain among the most reliable ways to turn ordinary bugs into security exploits.</p>
+<p>To prevent these vulnerabilities, we first need to understand them: what the failure mode is, what conditions trigger it, and how to prevent the next one from shipping. This requires a way to detect vulnerable code <em>and</em> evaluate the accuracy of our detectors.</p>
 <p>I am building <strong>OOB Bench</strong> to benchmark how well large language models (LLMs) can identify and classify memory safety vulnerabilities in C and C++.</p>
 <hr>
 <section id="classifying-vulnerabilities-the-easy-baseline-that-wasnt" class="level2">
