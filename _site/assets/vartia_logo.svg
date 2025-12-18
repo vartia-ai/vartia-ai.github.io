@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="631px" height="99px" viewBox="0 0 631 99" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="601px" height="99px" viewBox="0 0 601 99" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>Group 10</title>
     <g id="Page-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Group-10" transform="translate(2, 1)" stroke="#555555" stroke-width="2">
-            <rect id="Rectangle" fill="#ECECEC" x="346.5" y="1" width="94" height="19"></rect>
-            <rect id="Rectangle" fill="#ECECEC" x="466" y="1" width="22" height="95"></rect>
+            <rect id="Rectangle" fill="#ECECEC" x="328.5" y="1" width="92" height="21"></rect>
+            <rect id="Rectangle" fill="#ECECEC" x="438" y="1" width="22" height="95"></rect>
             <polygon id="Path-3" fill="#ECECEC" points="0 0 25 0 70 97 44 97"></polygon>
-            <polygon id="Path-4" fill="#ECECEC" points="60 63.8150847 89 -9.68092745e-16 114 0 72.7201297 91.437471"></polygon>
-            <polygon id="Path-5" fill="#ECECEC" points="144 0 169 0 213 97 188 97"></polygon>
-            <polygon id="Path-6" fill="#ECECEC" points="141 5.8455055 99 97 124 97 153.862427 33.4995245"></polygon>
-            <polygon id="Path-5" fill="#ECECEC" points="557.5 0 582.5 0 626.5 97 601.5 97"></polygon>
-            <polygon id="Path-6" fill="#ECECEC" points="554.5 5.8455055 512.5 97 537.5 97 567.362427 33.4995245"></polygon>
-            <polygon id="Path-7" fill="#ECECEC" points="227 1.13686838e-13 250 1.13686838e-13 250 97 227 97"></polygon>
-            <path d="M255,0 C281.462595,0 298.42831,0 305.897145,0 C314.783594,2.27201958 321.450188,8.3304307 325.896927,18.1752333 L325.896927,48.5 C324.424248,60.230184 316.818631,67.5509665 303.080076,70.4623475 C310.154674,78.4209033 317.76029,87.2667874 325.896927,97 L295.313367,97 L271.489542,70.4623475 L255,70.4623475 L255,46.9328825 C276.697772,46.9328825 290.135561,46.9328825 295.313367,46.9328825 C301.199394,45.0975995 303.788298,41.1104134 303.080076,34.9713243 C304.009727,29.1684792 301.420823,25.2322569 295.313367,23.1626575 C290.135561,23.1626575 276.697772,23.1626575 255,23.1626575 L255,0 Z" id="Path-8" fill="#ECECEC"></path>
-            <rect id="Rectangle" fill="#E4E4E4" x="383" y="29" width="21" height="67"></rect>
+            <polygon id="Path-4" fill="#ECECEC" points="61 63.8150847 90 -9.68092745e-16 115 0 73.7201297 91.437471"></polygon>
+            <polygon id="Path-5" fill="#ECECEC" points="147 0 172 0 216 97 191 97"></polygon>
+            <polygon id="Path-6" fill="#ECECEC" points="143 5.8455055 101 97 126 97 155.862427 33.4995245"></polygon>
+            <polygon id="Path-5" fill="#ECECEC" points="527.5 0 552.5 0 596.5 97 571.5 97"></polygon>
+            <polygon id="Path-6" fill="#ECECEC" points="523.5 5.8455055 481.5 97 506.5 97 536.362427 33.4995245"></polygon>
+            <path d="M256,97 L233,97 L233,1.13686838e-13 L289.080076,0 C301.432931,0 308.367071,11.2204622 310.480807,15.1516254 C311.438529,16.9328138 313.928977,24 313.928977,32.8628496 C313.928977,51.5568439 308.731629,62.096197 298.816943,66.8347806 C300.732275,70.9358073 306.758936,80.9908804 316.896927,97 L291.080076,97 L270.822809,56.5827735 C274.971557,54.8409981 279.135076,53.0088037 283.313367,51.0861905 C289.476567,49.0861905 291.080076,42.7771033 291.080076,34.9713243 C291.080076,27.1655452 289.897145,21 284.313367,19.1626575 L256,19.162 L256,97 Z" id="Combined-Shape" fill="#ECECEC"></path>
+            <rect id="Rectangle" fill="#E4E4E4" x="362" y="27" width="22" height="70"></rect>
         </g>
     </g>
 </svg>

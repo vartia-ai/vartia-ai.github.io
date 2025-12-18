@@ -30,3 +30,6 @@ format:
     mathjax: false
 resources:
   - site_libs
+  - styles.css
+  - styles/site-background.css
+  - assets/bg_grid.svg
