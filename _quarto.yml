@@ -4,6 +4,7 @@ project:
     - index.qmd
     - about.qmd
     - book.qmd
+    - thank-you.qmd
     - "posts/*/index.qmd"
 
 website:

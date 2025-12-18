@@ -1,0 +1,14 @@
+---
+title: "Thank You"
+page-layout: article
+toc: false
+---
+
+# Thanks for booking
+
+Your session is confirmed. You’ll get a calendar invite with the meeting link and details shortly.
+
+- Need to adjust the time? [Reschedule here](book.html).
+- Have questions before we meet? Email brian@vartia.ai.
+
+[Back to home](index.html)

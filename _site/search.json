@@ -61,5 +61,12 @@
     "title": "Book a Consult",
     "section": "",
     "text": "Book a Consult\nSchedule time with Vartia.ai using the embed below."
+  },
+  {
+    "objectID": "thank-you.html",
+    "href": "thank-you.html",
+    "title": "Thank You",
+    "section": "",
+    "text": "Thanks for booking\nYour session is confirmed. You’ll get a calendar invite with the meeting link and details shortly.\n\nNeed to adjust the time? Reschedule here.\nHave questions before we meet? Email brian@vartia.ai.\n\nBack to home"
   }
 ]
