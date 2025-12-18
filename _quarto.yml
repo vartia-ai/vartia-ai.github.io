@@ -19,8 +19,8 @@ format:
       - cosmo
       - brand
     css:
-      - styles.css
-      - styles/site-background.css
+      - styles.css?v=20241217a
+      - styles/site-background.css?v=20241217a
     include-in-header:
       - includes/gtm-head.html
       - includes/calendly-head.html
