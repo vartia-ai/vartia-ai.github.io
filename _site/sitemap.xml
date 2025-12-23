@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://vartia.ai/about.html</loc>
-    <lastmod>2025-12-05T21:15:54.616Z</lastmod>
+    <lastmod>2025-12-18T22:15:23.533Z</lastmod>
   </url>
   <url>
     <loc>https://vartia.ai/index.html</loc>
@@ -19,5 +19,9 @@
   <url>
     <loc>https://vartia.ai/thank-you.html</loc>
     <lastmod>2025-12-18T19:23:59.420Z</lastmod>
+  </url>
+  <url>
+    <loc>https://vartia.ai/posts/oob_bench2/index.html</loc>
+    <lastmod>2025-12-23T01:51:20.528Z</lastmod>
   </url>
 </urlset>

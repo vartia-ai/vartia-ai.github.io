@@ -1,19 +1,34 @@
 ---
 title: "About"
-image: profile.jpg
-about:
-  template: jolla
-  links:
-    - icon: twitter
-      text: Twitter
-      href: https://twitter.com
-    - icon: linkedin
-      text: LinkedIn
-      href: https://linkedin.com
-    - icon: github
-      text: Github
-      href: https://github.com
+---
+
+Vartia is a small engineering practice focused on **machine learning systems and software development**.
+
+We started Vartia to work on problems that tend to fall between traditional boundaries: where machine learning meets large, long-lived software systems, and where subtle failures can have outsized consequences. 
+Much of our work involves understanding how systems behave under real conditions, rather than how they perform on paper.
+
+Our background is rooted in **production software engineering** as much as in machine learning.
+We’ve built and maintained complex systems across mobile, web, and embedded environments, and we approach ML with the same mindset: careful design, attention to failure modes, and skepticism of overly abstract metrics.
 
 ---
 
-About this blog
+### Team
+
+**Brian Williams**  
+Brian is a machine learning engineer and software developer with more than two decades of experience building real-world systems.
+
+He previously worked as a **Machine Learning Engineer at Apple**, where he contributed to multiple ML-driven projects inside large production environments. 
+While much of that work is not public, it shaped a practical perspective on applied machine learning: 
+models must integrate cleanly with software systems, operate under constraints, and be evaluated in ways that reflect how they will actually be used.
+
+Earlier in his career, Brian worked as a senior software engineer and architect across a range of domains, including mobile platforms, computer vision, developer tools, and user-facing products. 
+That background informs the current work at Vartia, which treats machine learning as one component of a broader engineering system, not an isolated artifact.
+
+**Albert Papp**  
+*Bio coming soon.*
+
+---
+
+If you’re interested in discussing this work, collaborating, or applying similar ideas to practical systems, feel free to get in touch.
+Email [brian@vartia.ai](mailto:brian@vartia.ai)
+or book a free 30 minute consulting call:

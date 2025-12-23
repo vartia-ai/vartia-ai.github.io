@@ -1,0 +1,134 @@
+---
+title: "When Are Two Bugs the Same Bug?"
+bibliography: references.bib
+---
+
+# When Are Two Bugs the Same Bug?
+
+*Article 2 of the OOB Bench series.*
+
+In the first article, we showed that for the purpose of identifying weaknesses in C code, existing CWE labels are poorly aligned with code-centric analysis.
+The problem is not the labels themselves, but the ambiguity introduced by hierarchical specificity and by mixing causes with consequences.
+The same vulnerable code can be described correctly at multiple levels of the CWE hierarchy, while different failure mechanisms can share a label.
+
+The result is a dataset that does not reliably capture the properties of the code needed to evaluate or train a classifier.
+If labels do not define a stable equivalence relation, classification quality cannot be measured because it is unclear what it even means for two vulnerabilities to be “the same.”
+
+At its core, building a classifier is a question of sameness.
+
+For the purpose of identifying memory-safety vulnerabilities, we define *same* as follows:
+
+> **Definition (Bug Sameness)**  
+> Two vulnerabilities are the same if they exhibit the same failure mechanism as visible in code and are prevented by the same class of fix.
+
+This definition is intentionally operational. It does not depend on reporting conventions, vulnerability IDs, or taxonomy depth.
+It depends only on what the code does and how it must be corrected.
+
+In this study, we analyze approximately 1,300 CVEs.
+At this scale, fully manual analysis is infeasible, which motivates the need for assisted judgment and careful control over how equivalence is established.
+
+## LLM as a Judge
+
+Prior work has explored the use of large language models as evaluators of model outputs and annotations.
+In particular, *Judging LLM-as-a-Judge* [@liu2023judging] reports high agreement between LLM judgments and human raters across a range of evaluation tasks.
+
+These results do not imply that LLMs are universally reliable judges.
+However, they suggest that LLMs can plausibly be used for **constrained judgment tasks** when the task definition is clear and the output space is limited.
+
+The task in this work-deciding whether two code examples exhibit the *same* underlying vulnerability-is intentionally framed as a pairwise judgment.
+Pairwise decisions of *same* versus *not same* are substantially more direct than assigning a vulnerability to a position in a predefined taxonomy.
+Hierarchical ambiguity and cause–effect conflation, which complicate CWE labeling, do not arise in the same way.
+
+By treating pairwise comparison as the primitive operation, we avoid committing to a rigid taxonomy upfront.
+Instead, equivalence judgments can serve as the foundation for later structure, rather than being constrained by it.
+
+## Trust, but Verify
+
+Any use of automated judgment requires explicit verification. LLM-based analysis was therefore audited at each stage of the process.
+Custom UI tooling was built to support efficient human review, allowing auditors to inspect code, patches, and model rationales side by side.
+
+After the initial analysis pass, results were spot-checked across multiple buckets.
+These checks were broadly aligned with human judgment and did not reveal systematic disagreement.
+While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight.
+
+Even with automated judgment, exhaustive pairwise comparison is infeasible. Comparing 1,300 items yields 844,350 possible pairs, which is prohibitively expensive and unnecessary.
+Most comparisons are uninformative, as many vulnerabilities are clearly unrelated.
+
+To make pairwise judgment tractable, we introduce a bucketing strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint.
+The buckets are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.
+
+Crucially, this structure is defined loosely and refined iteratively, allowing the data to guide its evolution.
+Taxonomy here is an instrument for efficiency, not a claim about ground truth.
+
+
+## Unit of Analysis
+
+Although we start from CVEs, the unit of analysis in OOB Bench is a **vulnerable code slice**: a patch-local, function-level region sufficient to explain the bug and its fix.
+A single CVE may yield zero, one, or multiple such slices, depending on how many distinct vulnerable sites are present.
+
+This distinction is critical. CVEs are reporting artifacts; code slices are the objects that exhibit failure mechanisms and can be compared meaningfully.
+
+## Primary Analysis
+
+The first step in the process is an analysis and cleanup pass. For each CVE, the committed code changes and associated metadata are provided to an LLM for inspection.
+The task is to analyze the vulnerable code and its fix, and to identify one or more candidate code slices suitable for further comparison.
+
+Each identified slice is then analyzed along the axes of a provisional schema. The outcome for a given CVE may be zero, one, or several analyzed slices.
+If no suitable vulnerable function can be identified, the model is instructed to return the enum `insufficient_information`.
+
+For each slice, the LLM selects an enumeration value for each axis.
+If no existing enumeration is appropriate, the model may return `other` along with a brief explanation or suggested new category.
+These `other` cases are reviewed periodically, and recurring patterns are promoted into the schema.
+
+The intent of this process is iterative refinement. As more CVEs are analyzed, the schema should stabilize and the number of `other` classifications should decrease.
+
+Initially, this did not occur. I expected the distribution of labels to follow an 80/20 pattern, with a small number of categories covering most cases.
+Instead, the first schema was too granular: many slices required special-case labels, and the `other` category remained large.
+
+The problem was one of granularity. The categories were neither stable nor reusable.
+
+I reset the schema to be deliberately broader and less precise-aiming for **pebbles**, not boulders and not sand.
+Repeating the analysis under this revised schema led to rapid convergence: the number of `other` classifications dropped quickly, and the remaining enumerations filled in consistently.
+
+In addition to structured labels, the analysis phase records the vulnerable function or functions, a concise summary, and free-form tags.
+Crucially, the LLM is explicitly encouraged to return `UNEVALUATABLE` when insufficient evidence is available to make a reliable judgment.
+
+
+## The Stabilized Schema
+
+The final schema converged on three categories:
+
+- **Primary**: the class of invariant that is violated  
+  (e.g., memory access violation, lifetime violation, numeric-to-memory hazard)
+
+- **Trigger**: the immediate causal mistake that leads to the violation  
+  (e.g., missing bounds check, integer truncation, stale pointer, misuse of a length field)
+
+- **Sink**: the function, operation, or language construct through which the violation manifests  
+  (e.g., `memcpy`, array index write, string API, allocator/free)
+
+These axes are semi-orthogonal, limited in scope, and expressive enough to group similar vulnerabilities without being predetermined.
+Together, they constrain classification while leaving room for judgment where the code itself is ambiguous.
+
+For the purposes of bucketing and comparison, the three values are combined into a **vulnerability signature**.
+The signature is not intended to define sameness. It serves only to group plausibly related slices and reduce the space of pairwise comparisons.
+
+To validate the analysis process, we spot-checked 30 analyzed slices across 10 distinct buckets. No material disagreements were found.
+Custom tooling was built to support this review, including Streamlit-based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format.
+
+## Signature Is Not Sameness
+
+![CVE Match Review](cve_match.png){fig-cap="Same signature, different bug. Both vulnerabilities are out-of-bounds reads caused by bounds issues on an array index, but one is an off-by-one check and the other is missing checks entirely. The signature is a bucketing tool; sameness requires pairwise judgment."}
+
+This example illustrates a central constraint of the approach: signatures are not intended to define equivalence. They are deliberately coarse, designed to group plausibly related vulnerabilities while preserving the need for direct judgment. Two slices may share a signature and still represent meaningfully different bugs.
+
+![Analyses Marked as OTHER](other_analyses.jpg){fig-cap="OTHER is a first-class outcome. When a code slice does not exhibit a memory-safety mechanism, the system records that explicitly instead of forcing it into a nearby label."}
+
+Equally important, the analysis process allows explicit refusal. When a code slice does not clearly demonstrate a memory-safety failure, it is marked as `OTHER` rather than coerced into an ill-fitting category. This prevents noise from propagating into later stages of comparison and training.
+
+This process resulted in 67 broad signature types. As expected, the distribution of examples across signatures followed a power-law pattern, with the majority of slices concentrated in a small number of categories.
+
+![Signature outcomes overview](signatures.png){fig-cap="Distribution of analyzed slices across 67 signature categories. After the first ten signatures, very few positive pairs are found. Further splitting reduced coverage without improving judgment consistency."}
+
+At this point, the problem was no longer defining sameness, but achieving sufficient coverage across signature types. While out-of-bounds access vulnerabilities were well represented, most other signatures lacked enough positive pairs for training. The next article addresses this bottleneck by introducing synthetic, automatically verified examples.
+

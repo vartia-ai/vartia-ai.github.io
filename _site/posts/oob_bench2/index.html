@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Vartia.ai</title>
+<title>When Are Two Bugs the Same Bug? – Vartia.ai</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,25 +20,43 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<link href="./assets/favicon.svg" rel="icon" type="image/svg+xml">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-5b4ad623e5705c0698d39aec6f10cf02.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<link href="../../assets/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5b4ad623e5705c0698d39aec6f10cf02.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "language": {
     "search-no-results-text": "No results",
@@ -54,35 +72,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 <!-- Google Tag Manager -->
 <script>
 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -94,49 +83,37 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <script src="https://assets.calendly.com/assets/external/widget.js" async=""></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="styles/site-background.css">
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../styles/site-background.css">
 </head>
 
-<body class="home quarto-light">
+<body class="fullcontent quarto-light">
 
 <div id="quarto-search-results"></div>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">When Are Two Bugs the Same Bug?</h1>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content column-page" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 <!-- Google Tag Manager (noscript) -->
 <script>
 (function() {
@@ -148,84 +125,113 @@ window.Quarto = {
 </script>
 <noscript id="gtm-noscript"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
-
-
-
-
 <div class="nav-header">
-  <a href="./" class="nav-logo">
-    <img src="assets/vartia_logo.svg" alt="Vartia logo">
+  <a href="../../" class="nav-logo">
+    <img src="../../assets/vartia_logo.svg" alt="Vartia logo">
   </a>
-  <a href="book.html" class="nav-cta">Book a Consult</a>
+  <a href="../../book.html" class="nav-cta">
+     Book a Consult
+  </a>
 </div>
 
-<div class="stage">
-  <div class="grid"></div>
-  <div class="noise"></div>
 
-  <div class="hero">
-    <img src="assets/vartia_logo.svg" class="logo" alt="Vartia">
 
-    <div class="subtitle">Machine Learning Engineering</div>
-  </div>
+
+
+<section id="when-are-two-bugs-the-same-bug" class="level1">
+<h1>When Are Two Bugs the Same Bug?</h1>
+<p><em>Article 2 of the OOB Bench series.</em></p>
+<p>In the first article, we showed that for the purpose of identifying weaknesses in C code, existing CWE labels are poorly aligned with code-centric analysis. The problem is not the labels themselves, but the ambiguity introduced by hierarchical specificity and by mixing causes with consequences. The same vulnerable code can be described correctly at multiple levels of the CWE hierarchy, while different failure mechanisms can share a label.</p>
+<p>The result is a dataset that does not reliably capture the properties of the code needed to evaluate or train a classifier. If labels do not define a stable equivalence relation, classification quality cannot be measured because it is unclear what it even means for two vulnerabilities to be “the same.”</p>
+<p>At its core, building a classifier is a question of sameness.</p>
+<p>For the purpose of identifying memory-safety vulnerabilities, we define <em>same</em> as follows:</p>
+<blockquote class="blockquote">
+<p><strong>Definition (Bug Sameness)</strong><br>
+Two vulnerabilities are the same if they exhibit the same failure mechanism as visible in code and are prevented by the same class of fix.</p>
+</blockquote>
+<p>This definition is intentionally operational. It does not depend on reporting conventions, vulnerability IDs, or taxonomy depth. It depends only on what the code does and how it must be corrected.</p>
+<p>In this study, we analyze approximately 1,300 CVEs. At this scale, fully manual analysis is infeasible, which motivates the need for assisted judgment and careful control over how equivalence is established.</p>
+<section id="llm-as-a-judge" class="level2">
+<h2 class="anchored" data-anchor-id="llm-as-a-judge">LLM as a Judge</h2>
+<p>Prior work has explored the use of large language models as evaluators of model outputs and annotations. In particular, <em>Judging LLM-as-a-Judge</em> <span class="citation" data-cites="liu2023judging">(<a href="#ref-liu2023judging" role="doc-biblioref">Liu et al. 2023</a>)</span> reports high agreement between LLM judgments and human raters across a range of evaluation tasks.</p>
+<p>These results do not imply that LLMs are universally reliable judges. However, they suggest that LLMs can plausibly be used for <strong>constrained judgment tasks</strong> when the task definition is clear and the output space is limited.</p>
+<p>The task in this work-deciding whether two code examples exhibit the <em>same</em> underlying vulnerability-is intentionally framed as a pairwise judgment. Pairwise decisions of <em>same</em> versus <em>not same</em> are substantially more direct than assigning a vulnerability to a position in a predefined taxonomy. Hierarchical ambiguity and cause–effect conflation, which complicate CWE labeling, do not arise in the same way.</p>
+<p>By treating pairwise comparison as the primitive operation, we avoid committing to a rigid taxonomy upfront. Instead, equivalence judgments can serve as the foundation for later structure, rather than being constrained by it.</p>
+</section>
+<section id="trust-but-verify" class="level2">
+<h2 class="anchored" data-anchor-id="trust-but-verify">Trust, but Verify</h2>
+<p>Any use of automated judgment requires explicit verification. LLM-based analysis was therefore audited at each stage of the process. Custom UI tooling was built to support efficient human review, allowing auditors to inspect code, patches, and model rationales side by side.</p>
+<p>After the initial analysis pass, results were spot-checked across multiple buckets. These checks were broadly aligned with human judgment and did not reveal systematic disagreement. While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight.</p>
+<p>Even with automated judgment, exhaustive pairwise comparison is infeasible. Comparing 1,300 items yields 844,350 possible pairs, which is prohibitively expensive and unnecessary. Most comparisons are uninformative, as many vulnerabilities are clearly unrelated.</p>
+<p>To make pairwise judgment tractable, we introduce a bucketing strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint. The buckets are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.</p>
+<p>Crucially, this structure is defined loosely and refined iteratively, allowing the data to guide its evolution. Taxonomy here is an instrument for efficiency, not a claim about ground truth.</p>
+</section>
+<section id="unit-of-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="unit-of-analysis">Unit of Analysis</h2>
+<p>Although we start from CVEs, the unit of analysis in OOB Bench is a <strong>vulnerable code slice</strong>: a patch-local, function-level region sufficient to explain the bug and its fix. A single CVE may yield zero, one, or multiple such slices, depending on how many distinct vulnerable sites are present.</p>
+<p>This distinction is critical. CVEs are reporting artifacts; code slices are the objects that exhibit failure mechanisms and can be compared meaningfully.</p>
+</section>
+<section id="primary-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="primary-analysis">Primary Analysis</h2>
+<p>The first step in the process is an analysis and cleanup pass. For each CVE, the committed code changes and associated metadata are provided to an LLM for inspection. The task is to analyze the vulnerable code and its fix, and to identify one or more candidate code slices suitable for further comparison.</p>
+<p>Each identified slice is then analyzed along the axes of a provisional schema. The outcome for a given CVE may be zero, one, or several analyzed slices. If no suitable vulnerable function can be identified, the model is instructed to return the enum <code>insufficient_information</code>.</p>
+<p>For each slice, the LLM selects an enumeration value for each axis. If no existing enumeration is appropriate, the model may return <code>other</code> along with a brief explanation or suggested new category. These <code>other</code> cases are reviewed periodically, and recurring patterns are promoted into the schema.</p>
+<p>The intent of this process is iterative refinement. As more CVEs are analyzed, the schema should stabilize and the number of <code>other</code> classifications should decrease.</p>
+<p>Initially, this did not occur. I expected the distribution of labels to follow an 80/20 pattern, with a small number of categories covering most cases. Instead, the first schema was too granular: many slices required special-case labels, and the <code>other</code> category remained large.</p>
+<p>The problem was one of granularity. The categories were neither stable nor reusable.</p>
+<p>I reset the schema to be deliberately broader and less precise-aiming for <strong>pebbles</strong>, not boulders and not sand. Repeating the analysis under this revised schema led to rapid convergence: the number of <code>other</code> classifications dropped quickly, and the remaining enumerations filled in consistently.</p>
+<p>In addition to structured labels, the analysis phase records the vulnerable function or functions, a concise summary, and free-form tags. Crucially, the LLM is explicitly encouraged to return <code>UNEVALUATABLE</code> when insufficient evidence is available to make a reliable judgment.</p>
+</section>
+<section id="the-stabilized-schema" class="level2">
+<h2 class="anchored" data-anchor-id="the-stabilized-schema">The Stabilized Schema</h2>
+<p>The final schema converged on three categories:</p>
+<ul>
+<li><p><strong>Primary</strong>: the class of invariant that is violated<br>
+(e.g., memory access violation, lifetime violation, numeric-to-memory hazard)</p></li>
+<li><p><strong>Trigger</strong>: the immediate causal mistake that leads to the violation<br>
+(e.g., missing bounds check, integer truncation, stale pointer, misuse of a length field)</p></li>
+<li><p><strong>Sink</strong>: the function, operation, or language construct through which the violation manifests<br>
+(e.g., <code>memcpy</code>, array index write, string API, allocator/free)</p></li>
+</ul>
+<p>These axes are semi-orthogonal, limited in scope, and expressive enough to group similar vulnerabilities without being predetermined. Together, they constrain classification while leaving room for judgment where the code itself is ambiguous.</p>
+<p>For the purposes of bucketing and comparison, the three values are combined into a <strong>vulnerability signature</strong>. The signature is not intended to define sameness. It serves only to group plausibly related slices and reduce the space of pairwise comparisons.</p>
+<p>To validate the analysis process, we spot-checked 30 analyzed slices across 10 distinct buckets. No material disagreements were found. Custom tooling was built to support this review, including Streamlit-based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format.</p>
+</section>
+<section id="signature-is-not-sameness" class="level2">
+<h2 class="anchored" data-anchor-id="signature-is-not-sameness">Signature Is Not Sameness</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="cve_match.png" class="img-fluid figure-img"></p>
+<figcaption>CVE Match Review</figcaption>
+</figure>
 </div>
-<section id="latest-articles" class="level2 home-listing">
-<h2 class="anchored" data-anchor-id="latest-articles">Latest Articles</h2>
+<p>This example illustrates a central constraint of the approach: signatures are not intended to define equivalence. They are deliberately coarse, designed to group plausibly related vulnerabilities while preserving the need for direct judgment. Two slices may share a signature and still represent meaningfully different bugs.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="other_analyses.jpg" class="img-fluid figure-img"></p>
+<figcaption>Analyses Marked as OTHER</figcaption>
+</figure>
+</div>
+<p>Equally important, the analysis process allows explicit refusal. When a code slice does not clearly demonstrate a memory-safety failure, it is marked as <code>OTHER</code> rather than coerced into an ill-fitting category. This prevents noise from propagating into later stages of comparison and training.</p>
+<p>This process resulted in 67 broad signature types. As expected, the distribution of examples across signatures followed a power-law pattern, with the majority of slices concentrated in a small number of categories.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="signatures.png" class="img-fluid figure-img"></p>
+<figcaption>Signature outcomes overview</figcaption>
+</figure>
+</div>
+<p>At this point, the problem was no longer defining sameness, but achieving sufficient coverage across signature types. While out-of-bounds access vulnerabilities were well represented, most other signatures lacked enough positive pairs for training. The next article addresses this bottleneck by introducing synthetic, automatically verified examples.</p>
+
+
+
+</section>
 </section>
 
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1766454680528" data-listing-reading-time-sort="7" data-listing-word-count-sort="1398">
-<div class="thumbnail"><a href="./posts/oob_bench2/index.html" class="no-external">
-
-<p class="card-img-top"><img src="assets/vartia_logo.svg" alt="Vartia logo"  class="thumbnail-image card-img"/></p>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/oob_bench2/index.html" class="no-external">When Are Two Bugs the Same Bug?</a>
-</h3>
-<div class="delink listing-description"><a href="./posts/oob_bench2/index.html" class="no-external">
-<em>Article 2 of the OOB Bench series.</em>
-</a></div>
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-liu2023judging" class="csl-entry" role="listitem">
+Liu, Y. et al. 2023. <span>“Judging LLM-as-a-Judge: A Comprehensive Study on LLM-Based Evaluation.”</span> <a href="https://arxiv.org/abs/2306.05685">https://arxiv.org/abs/2306.05685</a>.
 </div>
-<div class="metadata">
-<a href="./posts/oob_bench2/index.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="Q1ZFJTJDU29mdHdhcmUlMjBXZWFrbmVzcyUyQ01lbW9yeSUyMFZ1bG5lcmFiaWxpdGllcw==" data-listing-date-sort="1765785600000" data-listing-file-modified-sort="1766039881207" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="760">
-<div class="thumbnail"><a href="./posts/oob_bench1/index.html" class="no-external">
-
-<img loading="lazy" src="./posts/oob_bench1/thumbnail.png" class="thumbnail-image">
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/oob_bench1/index.html" class="no-external">OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++</a>
-</h3>
-<div class="delink listing-description"><a href="./posts/oob_bench1/index.html" class="no-external">
-Memory-related bugs are some of the most common and costly security failures in software.<br>
-The industry has been burned by these bugs since before the Morris Worm incident…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./posts/oob_bench1/index.html" class="no-external">
-<div class="listing-date">
-Dec 15, 2025
-</div>
-<div class="listing-author">
-Brian Williams
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
