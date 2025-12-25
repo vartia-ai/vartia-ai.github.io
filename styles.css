@@ -180,6 +180,23 @@ a:hover {
   color: #144ea3;
 }
 
+/* Appendix/footer: keep references legible */
+#quarto-appendix,
+#quarto-appendix .quarto-appendix-contents {
+  background: var(--bg);
+  color: var(--text);
+}
+
+#quarto-appendix a {
+  color: #1f6feb;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+#quarto-appendix a:hover {
+  color: #144ea3;
+}
+
 /* Headings */
 h1, h2, h3, h4, h5, h6, .title {
   color: var(--text) !important;

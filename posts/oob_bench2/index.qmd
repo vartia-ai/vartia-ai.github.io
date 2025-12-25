@@ -1,9 +1,12 @@
 ---
 title: "When Are Two Bugs the Same Bug?"
 bibliography: references.bib
+image: thumbnail.png
 ---
 
 # When Are Two Bugs the Same Bug?
+
+![Illustration of two glowing cubes](article_hero.png){.article-hero}
 
 *Article 2 of the OOB Bench series.*
 
