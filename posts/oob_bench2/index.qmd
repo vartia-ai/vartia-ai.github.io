@@ -1,7 +1,13 @@
 ---
 title: "When Are Two Bugs the Same Bug?"
 bibliography: references.bib
+author: "Brian Williams"
 image: thumbnail.png
+date: "2025-12-23"
+categories:
+  - CVE
+  - Software Weakness
+  - Memory Vulnerabilities
 ---
 
 # When Are Two Bugs the Same Bug?
