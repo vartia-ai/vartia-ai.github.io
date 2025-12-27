@@ -30,11 +30,14 @@ For the purpose of identifying memory-safety vulnerabilities, we define *same* a
 > **Definition (Bug Sameness)**  
 > Two vulnerabilities are the same if they exhibit the same failure mechanism as visible in code and are prevented by the same class of fix.
 
-This definition is intentionally operational. It does not depend on reporting conventions, vulnerability IDs, or taxonomy depth.
-It depends only on what the code does and how it must be corrected.
+This definition is:
+
+1. Operationally defined (what the code does and how it must be corrected)
+2. Non-hierarchal (flat)
+3. Independent of reporting convention and taxonomy depth
 
 In this study, we analyze approximately 1,300 CVEs.
-At this scale, fully manual analysis is infeasible, which motivates the need for assisted judgment and careful control over how equivalence is established.
+At this scale, fully manual analysis is infeasible. LLMs are required to assist with judgment. Human auditors are however used to spot check the judgement of the LLMs
 
 ## LLM as a Judge
 
@@ -46,7 +49,7 @@ However, they suggest that LLMs can plausibly be used for **constrained judgment
 
 The task in this work-deciding whether two code examples exhibit the *same* underlying vulnerability-is intentionally framed as a pairwise judgment.
 Pairwise decisions of *same* versus *not same* are substantially more direct than assigning a vulnerability to a position in a predefined taxonomy.
-Hierarchical ambiguity and cause–effect conflation, which complicate CWE labeling, do not arise in the same way.
+Hierarchical ambiguity and cause effect conflation, which complicate CWE labeling, do not arise in the same way.
 
 By treating pairwise comparison as the primitive operation, we avoid committing to a rigid taxonomy upfront.
 Instead, equivalence judgments can serve as the foundation for later structure, rather than being constrained by it.
@@ -54,21 +57,20 @@ Instead, equivalence judgments can serve as the foundation for later structure, 
 ## Trust, but Verify
 
 Any use of automated judgment requires explicit verification. LLM-based analysis was therefore audited at each stage of the process.
-Custom UI tooling was built to support efficient human review, allowing auditors to inspect code, patches, and model rationales side by side.
-
-After the initial analysis pass, results were spot-checked across multiple buckets.
-These checks were broadly aligned with human judgment and did not reveal systematic disagreement.
-While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight.
+Custom UI tooling was built to support efficient human review, allowing us to inspect code, patches, and model rationales side by side.
 
 Even with automated judgment, exhaustive pairwise comparison is infeasible. Comparing 1,300 items yields 844,350 possible pairs, which is prohibitively expensive and unnecessary.
 Most comparisons are uninformative, as many vulnerabilities are clearly unrelated.
 
-To make pairwise judgment tractable, we introduce a bucketing strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint.
-The buckets are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.
+To make pairwise judgment tractable, we introduce a grouping strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint.
+The groups are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.
+
+After the initial analysis pass, results were spot-checked across multiple groupings.
+These checks were broadly aligned with human judgment and did not reveal systematic disagreement.
+While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight.
 
 Crucially, this structure is defined loosely and refined iteratively, allowing the data to guide its evolution.
 Taxonomy here is an instrument for efficiency, not a claim about ground truth.
-
 
 ## Unit of Analysis
 
@@ -83,7 +85,7 @@ The first step in the process is an analysis and cleanup pass. For each CVE, the
 The task is to analyze the vulnerable code and its fix, and to identify one or more candidate code slices suitable for further comparison.
 
 Each identified slice is then analyzed along the axes of a provisional schema. The outcome for a given CVE may be zero, one, or several analyzed slices.
-If no suitable vulnerable function can be identified, the model is instructed to return the enum `insufficient_information`.
+If no suitable vulnerable function can be identified, the model is instructed to return an `insufficient_information` message.
 
 For each slice, the LLM selects an enumeration value for each axis.
 If no existing enumeration is appropriate, the model may return `other` along with a brief explanation or suggested new category.
@@ -91,17 +93,16 @@ These `other` cases are reviewed periodically, and recurring patterns are promot
 
 The intent of this process is iterative refinement. As more CVEs are analyzed, the schema should stabilize and the number of `other` classifications should decrease.
 
-Initially, this did not occur. I expected the distribution of labels to follow an 80/20 pattern, with a small number of categories covering most cases.
+Initially, this did not occur. The distribution of labels was expected to follow an 80/20 pattern, with a small number of categories covering most cases.
 Instead, the first schema was too granular: many slices required special-case labels, and the `other` category remained large.
 
 The problem was one of granularity. The categories were neither stable nor reusable.
 
-I reset the schema to be deliberately broader and less precise-aiming for **pebbles**, not boulders and not sand.
-Repeating the analysis under this revised schema led to rapid convergence: the number of `other` classifications dropped quickly, and the remaining enumerations filled in consistently.
+I reset the schema to be deliberately broader and less precise-aiming a more mid-level of granularity.
+Repeating the analysis under this new revised schema led to rapid convergence: the number of `other` classifications dropped quickly, and the remaining enumerations filled in quickly.
 
 In addition to structured labels, the analysis phase records the vulnerable function or functions, a concise summary, and free-form tags.
 Crucially, the LLM is explicitly encouraged to return `UNEVALUATABLE` when insufficient evidence is available to make a reliable judgment.
-
 
 ## The Stabilized Schema
 
@@ -123,11 +124,11 @@ For the purposes of bucketing and comparison, the three values are combined into
 The signature is not intended to define sameness. It serves only to group plausibly related slices and reduce the space of pairwise comparisons.
 
 To validate the analysis process, we spot-checked 30 analyzed slices across 10 distinct buckets. No material disagreements were found.
-Custom tooling was built to support this review, including Streamlit-based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format.
+Custom tooling was built to support this review, including Streamlit based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format.
 
 ## Signature Is Not Sameness
 
-![CVE Match Review](cve_match.png){fig-cap="Same signature, different bug. Both vulnerabilities are out-of-bounds reads caused by bounds issues on an array index, but one is an off-by-one check and the other is missing checks entirely. The signature is a bucketing tool; sameness requires pairwise judgment."}
+![CVE Match Review](cve_match.png){fig-cap="Same signature, different bug. Both vulnerabilities are out-of-bounds reads caused by bounds issues on an array index, but one is an off-by-one check and the other is missing checks entirely. The signature is a grouping tool; sameness requires pairwise judgment."}
 
 This example illustrates a central constraint of the approach: signatures are not intended to define equivalence. They are deliberately coarse, designed to group plausibly related vulnerabilities while preserving the need for direct judgment. Two slices may share a signature and still represent meaningfully different bugs.
 
@@ -140,4 +141,3 @@ This process resulted in 67 broad signature types. As expected, the distribution
 ![Signature outcomes overview](signatures.png){fig-cap="Distribution of analyzed slices across 67 signature categories. After the first ten signatures, very few positive pairs are found. Further splitting reduced coverage without improving judgment consistency."}
 
 At this point, the problem was no longer defining sameness, but achieving sufficient coverage across signature types. While out-of-bounds access vulnerabilities were well represented, most other signatures lacked enough positive pairs for training. The next article addresses this bottleneck by introducing synthetic, automatically verified examples.
-
