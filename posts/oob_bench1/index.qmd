@@ -82,8 +82,8 @@ Next, I examined where the model was *wrong*.
 
 ![Confusion matrix for CWE prediction](confusion_matrix.png){fig-cap="Figure 2: Confusion matrix showing where model predictions did not match any assigned CWE."}
 
-This confusion matrix is a comparison of the dataset label and the LLM predicted lable. Correct predictions are found on the diagnal. 
-All of the non-diagnal cells show a count of that type of misprediction.
+This confusion matrix is a comparison of the dataset label and the LLM predicted lable. Correct predictions are found on the diagonal. 
+All of the non-diagonal cells show a count of that type of misprediction.
 
 The errors are not random. They cluster.
 
