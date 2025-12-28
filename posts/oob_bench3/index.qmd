@@ -1,0 +1,33 @@
+---
+title: ""
+bibliography: references.bib
+author: "Brian Williams"
+image: thumbnail.png
+date: "2025-12-27"
+categories:
+  - CVE
+  - Software Weakness
+  - Memory Vulnerabilities
+  - Synthetic data
+---
+
+# Automated validated example generation. Trustworth Synthetic Data
+
+![Illustration of glowing cubes on an assmebly line](article_hero.png){.article-hero}
+
+*Article 3 of the OOB Bench series.*
+
+In article 2, we ended with vulnerabilites in 67 broad signature types. Each signature type had a descirption, vulerable code slice and a patch to fix it.
+We have single examples for all 67 signature types. We have a sufficient number of pairs for less than 10 signature types. The majory have fewer than 5 pairs.
+This kind of data imballance is exptected. Fortunatly there is a way to fix it with the use of a coding agent.
+
+What makes a good vulnerability example
+• Embodies the weakness in the same form as the original
+• Looks like it came from a production codebase, ie not simplesitic, or too short, used custom data stuctures and language features like a normal code base would.  
+• Doesn't have obvious tells that it's synthetic.
+• Easy to compile run and instrament. 
+• Can be validated algorythmetcally
+• 
+Fill sparse or imbalanced weakness classes with validated, atomic examples so an embedding model can learn true weakness semantics (not file names or style).
+
+
