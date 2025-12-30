@@ -169,6 +169,20 @@ a:hover {
   color: #FFFFFF;
 }
 
+/* Code styling: remove grey boxes and match dark theme */
+code, pre, pre code {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text);
+  font-weight: 600;
+}
+
+pre {
+  padding: 0.35rem 0;
+  margin: 0.5rem 0;
+}
+
 /* Citation/tooltip popovers: keep links legible on light backgrounds */
 .tippy-box[data-theme~='quarto'] a {
   color: #1f6feb;
@@ -183,8 +197,8 @@ a:hover {
 /* Appendix/footer: keep references legible */
 #quarto-appendix,
 #quarto-appendix .quarto-appendix-contents {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg) !important;
+  color: var(--text) !important;
 }
 
 #quarto-appendix a {
@@ -208,6 +222,10 @@ blockquote, .blockquote {
   color: #FFFFFF;
   font-weight: 700;
   font-size: 1.08em;
+}
+
+figcaption {
+  color: #f0f0f0;
 }
 
 /* Quarto Listing Styles */
@@ -291,6 +309,11 @@ body.home .quarto-post.image-right .metadata {
 body.home .quarto-post.image-right .metadata a {
   color: var(--text);
   text-decoration: none;
+}
+
+/* Hide cross-article nav links in home listings */
+body.home .quarto-post.image-right .listing-description .article-nav {
+  display: none;
 }
 
 @media (max-width: 720px) {

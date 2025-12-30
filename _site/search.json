@@ -1,45 +1,52 @@
 [
   {
-    "objectID": "posts/oob_bench1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
-    "href": "posts/oob_bench1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
-    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
-    "section": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t",
-    "text": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t\nI began by running a simple baseline experiment: test whether state-of-the-art LLMs can correctly classify real security vulnerabilities.\nThe source data was the Common Vulnerabilities and Exposures (CVE) database. CVEs include natural-language descriptions, one or more Common Weakness Enumeration (CWE) labels, and often the code patch that fixed the issue.\nI downloaded roughly 20 years of CVE data from NIST and filtered for memory-safety-related CWEs. CVEs with available GitHub commits were converted into a dataset of vulnerable functions paired with their assigned weaknesses.\nThe result:\n\n~1300 CVEs\n79% had a single CWE label\n\nThe task given to the LLMs was intentionally simple:\n\nGiven the vulnerable code and its patch, return one or more CWEs that describe the weakness.\n\nIf the model returned any CWE listed in the CVE record, it was considered correct. Hierarchical matching was not allowed. This was meant to be a loose baseline, not a strict evaluation.\nI assumed modern LLMs would perform extremely well.\nThey did not.\nFrontier models returned a correct CWE less than 50% of the time."
+    "objectID": "posts/oob_bench2/index.html#llm-as-a-judge",
+    "href": "posts/oob_bench2/index.html#llm-as-a-judge",
+    "title": "When Are Two Bugs the Same Bug?",
+    "section": "LLM as a Judge",
+    "text": "LLM as a Judge\nPrior work has explored the use of large language models as evaluators of model outputs and annotations. In particular, Judging LLM-as-a-Judge (Liu et al. 2023) reports high agreement between LLM judgments and human raters across a range of evaluation tasks.\nThese results do not imply that LLMs are universally reliable judges. However, they suggest that LLMs can plausibly be used for constrained judgment tasks when the task definition is clear and the output space is limited.\nThe task in this work, deciding whether two code examples exhibit the same underlying vulnerability is intentionally framed as a pairwise judgment. Pairwise decisions of same versus not same are substantially more direct than assigning a vulnerability to a position in a predefined taxonomy. Hierarchical ambiguity and cause effect conflation, which complicate CWE labeling, do not arise in the same way.\nBy treating pairwise comparison as the primitive operation, we avoid committing to a rigid taxonomy upfront. Instead, equivalence judgments can serve as the foundation for later structure, rather than being constrained by it."
   },
   {
-    "objectID": "posts/oob_bench1/index.html#are-we-asking-the-wrong-question",
-    "href": "posts/oob_bench1/index.html#are-we-asking-the-wrong-question",
-    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
-    "section": "Are We Asking the Wrong Question?",
-    "text": "Are We Asking the Wrong Question?\nThis failure raises a deeper question:\n\nAre top-down CWE taxonomies compatible with code-centric evaluation at all?\n\nAfter digging into the dataset, the answer became clear: the problem is not the models—it is the labels.\nCWEs are assigned manually through a community-driven process spanning decades. That process is valuable, but it struggles to produce consistent, fine-grained, code-level classifications.\nThis is not an argument that CWEs are incorrect or useless.\nIt is an argument that they are misaligned with the task of classifying vulnerabilities directly from code."
+    "objectID": "posts/oob_bench2/index.html#trust-but-verify",
+    "href": "posts/oob_bench2/index.html#trust-but-verify",
+    "title": "When Are Two Bugs the Same Bug?",
+    "section": "Trust, but Verify",
+    "text": "Trust, but Verify\nAny use of automated judgment requires explicit verification. LLM based analysis was therefore audited at each stage of the process. Custom UI tooling was built to support efficient human review, allowing us to inspect code, patches, and model rationales side by side.\nEven with automated judgment, exhaustive pairwise comparison is infeasible. Comparing 1,300 items yields 844,350 possible pairs, which is prohibitively expensive and unnecessary. Most comparisons are uninformative, as many vulnerabilities are clearly unrelated.\nTo make pairwise judgment tractable, we introduce a grouping strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint. The groups are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.\nAfter the initial analysis pass, results were spot-checked across multiple groupings. These checks were broadly aligned with human judgment and did not reveal systematic disagreement. While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight.\nCrucially, this structure is defined loosely and refined iteratively, allowing the data to guide its evolution. Taxonomy here is an instrument for efficiency, not a claim about ground truth."
   },
   {
-    "objectID": "posts/oob_bench1/index.html#look-at-your-data",
-    "href": "posts/oob_bench1/index.html#look-at-your-data",
-    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
-    "section": "Look at Your Data",
-    "text": "Look at Your Data\nTo understand what was happening, I looked at the label distribution.\n\n\n\nHistogram of CVEs by CWE label\n\n\nThe dataset is extremely imbalanced. A small number of CWEs dominate the majority of examples.\nNext, I examined where the model was wrong.\n\n\n\nConfusion matrix for CWE prediction\n\n\nThis confusion matrix is a comparison of the dataset label and the LLM predicted lable. Correct predictions are found on the diagnal. All of the non-diagnal cells show a count of that type of misprediction.\nThe errors are not random. They cluster.\nCWE-119 is both:\n\nthe most over-predicted label (predicted as 119 when not)\nthe most under-predicted label (predicted as not 119 when it was)\n\nThis makes sense. CWE-119 (“Improper Restriction of Operations within the Bounds of a Memory Buffer”) is a parent of CWE-120, CWE-125, CWE-787, and a grandparent of others like CWE-121 and CWE-122.\nIt acts as a semantic catch-all."
+    "objectID": "posts/oob_bench2/index.html#unit-of-analysis",
+    "href": "posts/oob_bench2/index.html#unit-of-analysis",
+    "title": "When Are Two Bugs the Same Bug?",
+    "section": "Unit of Analysis",
+    "text": "Unit of Analysis\nAlthough we start from CVEs, the unit of analysis in OOB Bench is a vulnerable code slice: a patch local, function-level region sufficient to explain the bug and its fix. A single CVE may yield zero, one, or multiple such slices, depending on how many distinct vulnerable sites are present.\nThis distinction is critical. CVEs are reporting artifacts; code slices are the objects that exhibit failure mechanisms and can be compared meaningfully."
   },
   {
-    "objectID": "posts/oob_bench1/index.html#when-two-labels-are-both-correct",
-    "href": "posts/oob_bench1/index.html#when-two-labels-are-both-correct",
-    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
-    "section": "When Two Labels Are Both Correct",
-    "text": "When Two Labels Are Both Correct\nConsider CWE-122 (Heap-based Buffer Overflow) and CWE-787 (Out-of-Bounds Write).\nFor CVE-2025-54949, the official label is CWE-122. The LLM predicted CWE-787.\nThe code uses memcpy to copy data into a heap buffer without verifying that the buffer has sufficient space.\nBoth labels are correct.\n\nThe mechanism is an out-of-bounds write.\nThe consequence is a heap-based buffer overflow.\n\nThe CWE hierarchy forces a choice. The code does not."
+    "objectID": "posts/oob_bench2/index.html#primary-analysis",
+    "href": "posts/oob_bench2/index.html#primary-analysis",
+    "title": "When Are Two Bugs the Same Bug?",
+    "section": "Primary Analysis",
+    "text": "Primary Analysis\nThe first step in the process is an analysis and cleanup pass. For each CVE, the committed code changes and associated metadata are provided to an LLM for inspection. The task is to analyze the vulnerable code and its fix, and to identify one or more candidate code slices suitable for further comparison.\nEach identified slice is then analyzed along the axes of a provisional schema. The outcome for a given CVE may be zero, one, or several analyzed slices. If no suitable vulnerable function can be identified, the model is instructed to return an insufficient_information message.\nFor each slice, the LLM selects an enumeration value for each axis. If no existing enumeration is appropriate, the model may return other along with a brief explanation or suggested new category. These other cases are reviewed periodically, and recurring patterns are promoted into the schema.\nThe intent of this process is iterative refinement. As more CVEs are analyzed, the schema should stabilize and the number of other classifications should decrease.\nInitially, this did not occur. The distribution of labels was expected to follow an 80/20 pattern, with a small number of categories covering most cases. Instead, the first schema was too granular: many slices required special-case labels, and the other category remained large.\nThe problem was one of granularity. The categories were neither stable nor reusable.\nI reset the schema to be deliberately broader and less precise aiming a more mid-level of granularity. Repeating the analysis under this new revised schema led to rapid convergence: the number of other classifications dropped quickly, and the remaining enumerations filled in quickly.\nIn addition to structured labels, the analysis phase records the vulnerable function or functions, a concise summary, and free-form tags. Crucially, the LLM is explicitly encouraged to return UNEVALUATABLE when insufficient evidence is available to make a reliable judgment."
   },
   {
-    "objectID": "posts/oob_bench1/index.html#why-bottom-up-classification-matters",
-    "href": "posts/oob_bench1/index.html#why-bottom-up-classification-matters",
-    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
-    "section": "Why Bottom-Up Classification Matters",
-    "text": "Why Bottom-Up Classification Matters\nThe goal was never to reproduce CWE assignments.\nThe goal was to classify vulnerabilities as they manifest in code.\nTop-down labeling forces models to guess which level of abstraction the human annotator chose. That information is often absent from the code itself.\nTo build a code-centric evaluation system, weakness categories must be derived bottom-up, from concrete failure modes observed in real code—not imposed from a predefined hierarchy."
+    "objectID": "posts/oob_bench2/index.html#the-stabilized-schema",
+    "href": "posts/oob_bench2/index.html#the-stabilized-schema",
+    "title": "When Are Two Bugs the Same Bug?",
+    "section": "The Stabilized Schema",
+    "text": "The Stabilized Schema\nThe final schema converged on three categories:\n\nPrimary: the class of invariant that is violated\n(e.g., memory access violation, lifetime violation, numeric-to-memory hazard)\nTrigger: the immediate causal mistake that leads to the violation\n(e.g., missing bounds check, integer truncation, stale pointer, misuse of a length field)\nSink: the function, operation, or language construct through which the violation manifests\n(e.g., memcpy, array index write, string API, allocator/free)\n\nThese axes are semi-orthogonal, limited in scope, and expressive enough to group similar vulnerabilities without being predetermined. Together, they constrain classification while leaving room for judgment where the code itself is ambiguous.\nFor the purposes of bucketing and comparison, the three values are combined into a vulnerability signature. The signature is not intended to define sameness. It serves only to group plausibly related slices and reduce the space of pairwise comparisons.\nTo validate the analysis process, we spot checked 30 analyzed slices across 10 distinct buckets. No material disagreements were found. Custom tooling was built to support this review, including Streamlit based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format."
   },
   {
-    "objectID": "posts/oob_bench1/index.html#whats-next",
-    "href": "posts/oob_bench1/index.html#whats-next",
-    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
-    "section": "What’s Next",
-    "text": "What’s Next\nIn the next article, I’ll describe how I built a bottom-up taxonomy for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.\nThat taxonomy is the foundation of OOB Bench."
+    "objectID": "posts/oob_bench2/index.html#signature-is-not-sameness",
+    "href": "posts/oob_bench2/index.html#signature-is-not-sameness",
+    "title": "When Are Two Bugs the Same Bug?",
+    "section": "Signature Is Not Sameness",
+    "text": "Signature Is Not Sameness\n\n\n\nCVE Match Review\n\n\nThis example illustrates a central constraint of the approach: signatures are not intended to define equivalence. They are deliberately coarse, designed to group plausibly related vulnerabilities while preserving the need for direct judgment. Two slices may share a signature and still represent meaningfully different bugs.\n\n\n\nAnalyses Marked as OTHER\n\n\nEqually important, the analysis process allows explicit refusal. When a code slice does not clearly demonstrate a memory-safety failure, it is marked as OTHER rather than coerced into an ill-fitting category. This prevents noise from propagating into later stages of comparison and training.\nThis process resulted in 67 broad signature types. As expected, the distribution of examples across signatures followed a power-law pattern, with the majority of slices concentrated in a small number of categories.\n\n\n\nSignature outcomes overview\n\n\nAt this point, the problem was no longer defining sameness, but achieving sufficient coverage across signature types. While out-of-bounds access vulnerabilities were well represented, most other signatures lacked enough positive pairs for training. The next article addresses this bottleneck by introducing synthetic, automatically verified examples."
+  },
+  {
+    "objectID": "thank-you.html",
+    "href": "thank-you.html",
+    "title": "Thank You",
+    "section": "",
+    "text": "Thanks for booking\nYour session is confirmed. You’ll get a calendar invite with the meeting link and details shortly.\n\nNeed to adjust the time? Reschedule here.\nHave questions before we meet? Email brian@vartia.ai.\n\nBack to home"
   },
   {
     "objectID": "about.html",
@@ -63,52 +70,52 @@
     "text": "Book a Consult\nSchedule time with Vartia.ai using the embed below."
   },
   {
-    "objectID": "thank-you.html",
-    "href": "thank-you.html",
-    "title": "Thank You",
+    "objectID": "posts/oob_bench1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
+    "href": "posts/oob_bench1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
+    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t",
+    "text": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t\nI began by running a simple baseline experiment: test whether state-of-the-art LLMs can correctly classify real security vulnerabilities.\nThe source data was the Common Vulnerabilities and Exposures (CVE) database. CVEs include natural-language descriptions, one or more Common Weakness Enumeration (CWE) labels, and often the code patch that fixed the issue.\nI downloaded roughly 20 years of CVE data from NIST and filtered for memory-safety-related CWEs. CVEs with available GitHub commits were converted into a dataset of vulnerable functions paired with their assigned weaknesses.\nThe result:\n\n~1300 CVEs\n79% had a single CWE label\n\nThe task given to the LLMs was intentionally simple:\n\nGiven the vulnerable code and its patch, return one or more CWEs that describe the weakness.\n\nIf the model returned any CWE listed in the CVE record, it was considered correct. Hierarchical matching was not allowed. This was meant to be a loose baseline, not a strict evaluation.\nI assumed modern LLMs would perform extremely well.\nThey did not.\nFrontier models returned a correct CWE less than 50% of the time."
+  },
+  {
+    "objectID": "posts/oob_bench1/index.html#are-we-asking-the-wrong-question",
+    "href": "posts/oob_bench1/index.html#are-we-asking-the-wrong-question",
+    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Are We Asking the Wrong Question?",
+    "text": "Are We Asking the Wrong Question?\nThis failure raises a deeper question:\n\nAre top-down CWE taxonomies compatible with code-centric evaluation at all?\n\nAfter digging into the dataset, the answer became clear: the problem is not the models—it is the labels.\nCWEs are assigned manually through a community-driven process spanning decades. That process is valuable, but it struggles to produce consistent, fine-grained, code-level classifications.\nThis is not an argument that CWEs are incorrect or useless.\nIt is an argument that they are misaligned with the task of classifying vulnerabilities directly from code."
+  },
+  {
+    "objectID": "posts/oob_bench1/index.html#look-at-your-data",
+    "href": "posts/oob_bench1/index.html#look-at-your-data",
+    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Look at Your Data",
+    "text": "Look at Your Data\nTo understand what was happening, I looked at the label distribution.\n\n\n\nHistogram of CVEs by CWE label\n\n\nThe dataset is extremely imbalanced. A small number of CWEs dominate the majority of examples.\nNext, I examined where the model was wrong.\n\n\n\nConfusion matrix for CWE prediction\n\n\nThis confusion matrix is a comparison of the dataset label and the LLM predicted lable. Correct predictions are found on the diagonal. All of the non-diagonal cells show a count of that type of misprediction.\nThe errors are not random. They cluster.\nCWE-119 is both:\n\nthe most over-predicted label (predicted as 119 when not)\nthe most under-predicted label (predicted as not 119 when it was)\n\nThis makes sense. CWE-119 (“Improper Restriction of Operations within the Bounds of a Memory Buffer”) is a parent of CWE-120, CWE-125, CWE-787, and a grandparent of others like CWE-121 and CWE-122.\nIt acts as a semantic catch-all."
+  },
+  {
+    "objectID": "posts/oob_bench1/index.html#when-two-labels-are-both-correct",
+    "href": "posts/oob_bench1/index.html#when-two-labels-are-both-correct",
+    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "When Two Labels Are Both Correct",
+    "text": "When Two Labels Are Both Correct\nConsider CWE-122 (Heap-based Buffer Overflow) and CWE-787 (Out-of-Bounds Write).\nFor CVE-2025-54949, the official label is CWE-122. The LLM predicted CWE-787.\nThe code uses memcpy to copy data into a heap buffer without verifying that the buffer has sufficient space.\nBoth labels are correct.\n\nThe mechanism is an out-of-bounds write.\nThe consequence is a heap-based buffer overflow.\n\nThe CWE hierarchy forces a choice. The code does not."
+  },
+  {
+    "objectID": "posts/oob_bench1/index.html#why-bottom-up-classification-matters",
+    "href": "posts/oob_bench1/index.html#why-bottom-up-classification-matters",
+    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Why Bottom-Up Classification Matters",
+    "text": "Why Bottom-Up Classification Matters\nThe goal was never to reproduce CWE assignments.\nThe goal was to classify vulnerabilities as they manifest in code.\nTop-down labeling forces models to guess which level of abstraction the human annotator chose. That information is often absent from the code itself.\nTo build a code-centric evaluation system, weakness categories must be derived bottom-up, from concrete failure modes observed in real code—not imposed from a predefined hierarchy."
+  },
+  {
+    "objectID": "posts/oob_bench1/index.html#whats-next",
+    "href": "posts/oob_bench1/index.html#whats-next",
+    "title": "OOB Bench: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "What’s Next",
+    "text": "What’s Next\nIn the next article, I’ll describe how I built a bottom-up taxonomy for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.\nThat taxonomy is the foundation of OOB Bench. ← Article 2: When are 2 bugs the same bug"
+  },
+  {
+    "objectID": "posts/oob_bench2/index.html",
+    "href": "posts/oob_bench2/index.html",
+    "title": "When Are Two Bugs the Same Bug?",
     "section": "",
-    "text": "Thanks for booking\nYour session is confirmed. You’ll get a calendar invite with the meeting link and details shortly.\n\nNeed to adjust the time? Reschedule here.\nHave questions before we meet? Email brian@vartia.ai.\n\nBack to home"
-  },
-  {
-    "objectID": "posts/oob_bench2/index.html#llm-as-a-judge",
-    "href": "posts/oob_bench2/index.html#llm-as-a-judge",
-    "title": "When Are Two Bugs the Same Bug?",
-    "section": "LLM as a Judge",
-    "text": "LLM as a Judge\nPrior work has explored the use of large language models as evaluators of model outputs and annotations. In particular, Judging LLM-as-a-Judge (Liu et al. 2023) reports high agreement between LLM judgments and human raters across a range of evaluation tasks.\nThese results do not imply that LLMs are universally reliable judges. However, they suggest that LLMs can plausibly be used for constrained judgment tasks when the task definition is clear and the output space is limited.\nThe task in this work-deciding whether two code examples exhibit the same underlying vulnerability-is intentionally framed as a pairwise judgment. Pairwise decisions of same versus not same are substantially more direct than assigning a vulnerability to a position in a predefined taxonomy. Hierarchical ambiguity and cause–effect conflation, which complicate CWE labeling, do not arise in the same way.\nBy treating pairwise comparison as the primitive operation, we avoid committing to a rigid taxonomy upfront. Instead, equivalence judgments can serve as the foundation for later structure, rather than being constrained by it."
-  },
-  {
-    "objectID": "posts/oob_bench2/index.html#trust-but-verify",
-    "href": "posts/oob_bench2/index.html#trust-but-verify",
-    "title": "When Are Two Bugs the Same Bug?",
-    "section": "Trust, but Verify",
-    "text": "Trust, but Verify\nAny use of automated judgment requires explicit verification. LLM-based analysis was therefore audited at each stage of the process. Custom UI tooling was built to support efficient human review, allowing auditors to inspect code, patches, and model rationales side by side.\nAfter the initial analysis pass, results were spot-checked across multiple buckets. These checks were broadly aligned with human judgment and did not reveal systematic disagreement. While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight.\nEven with automated judgment, exhaustive pairwise comparison is infeasible. Comparing 1,300 items yields 844,350 possible pairs, which is prohibitively expensive and unnecessary. Most comparisons are uninformative, as many vulnerabilities are clearly unrelated.\nTo make pairwise judgment tractable, we introduce a bucketing strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint. The buckets are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.\nCrucially, this structure is defined loosely and refined iteratively, allowing the data to guide its evolution. Taxonomy here is an instrument for efficiency, not a claim about ground truth."
-  },
-  {
-    "objectID": "posts/oob_bench2/index.html#unit-of-analysis",
-    "href": "posts/oob_bench2/index.html#unit-of-analysis",
-    "title": "When Are Two Bugs the Same Bug?",
-    "section": "Unit of Analysis",
-    "text": "Unit of Analysis\nAlthough we start from CVEs, the unit of analysis in OOB Bench is a vulnerable code slice: a patch-local, function-level region sufficient to explain the bug and its fix. A single CVE may yield zero, one, or multiple such slices, depending on how many distinct vulnerable sites are present.\nThis distinction is critical. CVEs are reporting artifacts; code slices are the objects that exhibit failure mechanisms and can be compared meaningfully."
-  },
-  {
-    "objectID": "posts/oob_bench2/index.html#primary-analysis",
-    "href": "posts/oob_bench2/index.html#primary-analysis",
-    "title": "When Are Two Bugs the Same Bug?",
-    "section": "Primary Analysis",
-    "text": "Primary Analysis\nThe first step in the process is an analysis and cleanup pass. For each CVE, the committed code changes and associated metadata are provided to an LLM for inspection. The task is to analyze the vulnerable code and its fix, and to identify one or more candidate code slices suitable for further comparison.\nEach identified slice is then analyzed along the axes of a provisional schema. The outcome for a given CVE may be zero, one, or several analyzed slices. If no suitable vulnerable function can be identified, the model is instructed to return the enum insufficient_information.\nFor each slice, the LLM selects an enumeration value for each axis. If no existing enumeration is appropriate, the model may return other along with a brief explanation or suggested new category. These other cases are reviewed periodically, and recurring patterns are promoted into the schema.\nThe intent of this process is iterative refinement. As more CVEs are analyzed, the schema should stabilize and the number of other classifications should decrease.\nInitially, this did not occur. I expected the distribution of labels to follow an 80/20 pattern, with a small number of categories covering most cases. Instead, the first schema was too granular: many slices required special-case labels, and the other category remained large.\nThe problem was one of granularity. The categories were neither stable nor reusable.\nI reset the schema to be deliberately broader and less precise-aiming for pebbles, not boulders and not sand. Repeating the analysis under this revised schema led to rapid convergence: the number of other classifications dropped quickly, and the remaining enumerations filled in consistently.\nIn addition to structured labels, the analysis phase records the vulnerable function or functions, a concise summary, and free-form tags. Crucially, the LLM is explicitly encouraged to return UNEVALUATABLE when insufficient evidence is available to make a reliable judgment."
-  },
-  {
-    "objectID": "posts/oob_bench2/index.html#the-stabilized-schema",
-    "href": "posts/oob_bench2/index.html#the-stabilized-schema",
-    "title": "When Are Two Bugs the Same Bug?",
-    "section": "The Stabilized Schema",
-    "text": "The Stabilized Schema\nThe final schema converged on three categories:\n\nPrimary: the class of invariant that is violated\n(e.g., memory access violation, lifetime violation, numeric-to-memory hazard)\nTrigger: the immediate causal mistake that leads to the violation\n(e.g., missing bounds check, integer truncation, stale pointer, misuse of a length field)\nSink: the function, operation, or language construct through which the violation manifests\n(e.g., memcpy, array index write, string API, allocator/free)\n\nThese axes are semi-orthogonal, limited in scope, and expressive enough to group similar vulnerabilities without being predetermined. Together, they constrain classification while leaving room for judgment where the code itself is ambiguous.\nFor the purposes of bucketing and comparison, the three values are combined into a vulnerability signature. The signature is not intended to define sameness. It serves only to group plausibly related slices and reduce the space of pairwise comparisons.\nTo validate the analysis process, we spot-checked 30 analyzed slices across 10 distinct buckets. No material disagreements were found. Custom tooling was built to support this review, including Streamlit-based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format."
-  },
-  {
-    "objectID": "posts/oob_bench2/index.html#signature-is-not-sameness",
-    "href": "posts/oob_bench2/index.html#signature-is-not-sameness",
-    "title": "When Are Two Bugs the Same Bug?",
-    "section": "Signature Is Not Sameness",
-    "text": "Signature Is Not Sameness\n\n\n\nCVE Match Review\n\n\nThis example illustrates a central constraint of the approach: signatures are not intended to define equivalence. They are deliberately coarse, designed to group plausibly related vulnerabilities while preserving the need for direct judgment. Two slices may share a signature and still represent meaningfully different bugs.\n\n\n\nAnalyses Marked as OTHER\n\n\nEqually important, the analysis process allows explicit refusal. When a code slice does not clearly demonstrate a memory-safety failure, it is marked as OTHER rather than coerced into an ill-fitting category. This prevents noise from propagating into later stages of comparison and training.\nThis process resulted in 67 broad signature types. As expected, the distribution of examples across signatures followed a power-law pattern, with the majority of slices concentrated in a small number of categories.\n\n\n\nSignature outcomes overview\n\n\nAt this point, the problem was no longer defining sameness, but achieving sufficient coverage across signature types. While out-of-bounds access vulnerabilities were well represented, most other signatures lacked enough positive pairs for training. The next article addresses this bottleneck by introducing synthetic, automatically verified examples."
+    "text": "← Article 1: Building a Bottom-Up Taxonomy"
   }
 ]

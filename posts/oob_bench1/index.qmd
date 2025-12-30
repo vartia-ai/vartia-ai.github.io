@@ -12,7 +12,7 @@ include-after-body: ../footer_meta.html
 
 # OOB Bench: A bottom-up classification of memory safety vulnerabilities in C and C++
 
-![Illustration of a glowing cube in a grid](article_hero.jpg){.article-hero}
+![Illustration of a glowing cube in a grid](thumbnail.png){.article-hero}
 
 Memory-related bugs are some of the most common and costly security failures in software.  
 The industry has been burned by these bugs since before the Morris Worm incident made headlines in 1988. Here we are, 37 years later, and the same class of security bugs are still happening today.
@@ -132,3 +132,4 @@ To build a code-centric evaluation system, weakness categories must be derived *
 In the next article, I’ll describe how I built a **bottom-up taxonomy** for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.
 
 That taxonomy is the foundation of OOB Bench.
+[← Article 2: When are 2 bugs the same bug](../oob_bench2/)
