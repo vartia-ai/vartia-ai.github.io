@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Directory metadata state - LibTIFF family breakout</title>
+    <style>
+      :root {
+        --bg: #080808;
+        --surface: #111111;
+        --border: rgba(255, 255, 255, 0.1);
+        --text: #e5e5e5;
+        --text2: #cccccc;
+        --text-dim: #9a9a9a;
+        --white: #f5f5f5;
+        --danger: #ef4444;
+        --warn: #f59e0b;
+        --good: #22c55e;
+        --accent: #f0a030;
+        --accent-warm: #e95c35;
+        --mono: "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", "Menlo", monospace;
+        --sans: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 18px;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(240, 160, 48, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(240, 160, 48, 0.03) 1px, transparent 1px);
+        background-size: 160px 160px;
+        opacity: 0.35;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: var(--text);
+      }
+
+      pre {
+        margin-top: 12px;
+        padding: 16px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #050505;
+        color: var(--text2);
+        font: 12px/1.6 var(--mono);
+        white-space: pre-wrap;
+      }
+
+      .nav-bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        height: 56px;
+        padding: 0 36px;
+        background: rgba(8, 8, 8, 0.92);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .brand-text {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: var(--white);
+      }
+
+      .nav-pills,
+      .pill-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text2);
+        background: rgba(255, 255, 255, 0.03);
+        font: 500 12px/1.2 var(--mono);
+      }
+
+      .pill.current {
+        border-color: rgba(240, 160, 48, 0.35);
+        color: var(--accent);
+      }
+
+      .accent-bar {
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+      }
+
+      .hero {
+        position: relative;
+        z-index: 1;
+        padding: 48px 36px 24px;
+      }
+
+      .hero-inner,
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+
+      .hero-label,
+      .section-num {
+        margin-bottom: 14px;
+        color: var(--text-dim);
+        font: 600 12px/1.2 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .hero h1 {
+        font-size: clamp(38px, 5vw, 58px);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        margin-bottom: 18px;
+        color: var(--white);
+      }
+
+      .hero p {
+        max-width: 860px;
+        color: var(--text2);
+      }
+
+      .hero-actions {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .hero-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        font: 500 13px/1.2 var(--mono);
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 1;
+        padding: 0 36px 64px;
+      }
+
+      .report-section {
+        padding: 28px 0 10px;
+      }
+
+      .section-header {
+        margin-bottom: 18px;
+      }
+
+      .section-header h2 {
+        font-size: 28px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .stats-grid,
+      .finding-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .finding-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .finding-grid.support {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .stat-card,
+      .finding-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+      }
+
+      .stat-card h3,
+      .merged-card-title {
+        font-size: 19px;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin-bottom: 12px;
+        color: var(--white);
+      }
+
+      .stat-number {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 36px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .stat-card p,
+      .finding-summary {
+        color: var(--text2);
+        font-size: 15px;
+      }
+
+      .finding-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 10px;
+      }
+
+      .finding-issue-id {
+        color: var(--danger);
+        font: 600 13px/1.2 var(--mono);
+      }
+
+      .severity-badge {
+        display: inline-flex;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font: 600 11px/1.2 var(--mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: var(--warn);
+        background: rgba(245, 158, 11, 0.08);
+      }
+
+      .finding-callout {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+
+      .finding-callout strong {
+        color: var(--accent);
+        font: 600 11px/1.2 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .finding-callout p {
+        margin-top: 6px;
+        color: var(--text2);
+        font-size: 14px;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font: 600 11px/1.2 var(--mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--good);
+        background: rgba(34, 197, 94, 0.1);
+      }
+
+      .drawer {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .drawer summary {
+        cursor: pointer;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text2);
+        font: 500 12px/1.2 var(--mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .drawer > :not(summary) {
+        padding: 0 16px 16px;
+      }
+
+      .clean-list {
+        list-style: none;
+      }
+
+      .clean-list li + li {
+        margin-top: 10px;
+      }
+
+      .artifact-list a {
+        font: 500 13px/1.2 var(--mono);
+      }
+
+      .support-card p {
+        color: var(--text2);
+        font-size: 14px;
+      }
+
+      .support-links {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .note {
+        margin-top: 16px;
+        color: var(--text-dim);
+        font-size: 14px;
+      }
+
+      @media (max-width: 900px) {
+        .stats-grid,
+        .finding-grid,
+        .finding-grid.support {
+          grid-template-columns: 1fr;
+        }
+
+        .nav-bar {
+          height: auto;
+          padding: 14px 20px;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .hero,
+        .wrap {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav-bar">
+      <div class="brand-text">VARTIA.AI</div>
+      <div class="nav-pills">
+        <span class="pill">LibTIFF</span>
+        <span class="pill">Bug family breakout</span>
+        <span class="pill">2026-03-12</span>
+      </div>
+    </nav>
+    <div class="accent-bar"></div>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-label">Bug Family Breakout</div>
+        <h1>Directory metadata state</h1>
+        <p>
+          This cluster centers on TIFF directory parsing, field normalization,
+          and strip-array state. Unlike the geometry family, this one already
+          has both query and backtest evidence attached to multiple historical
+          members.
+        </p>
+        <div class="hero-actions">
+          <a class="hero-link" href="report_design.html#detector-validation-matrix">Back to detector coverage</a>
+          <a class="hero-link" href="report_design.html">Open main report</a>
+        </div>
+        <div class="pill-row" style="margin-top: 18px">
+          <a class="pill" href="family_raster_address_arithmetic.html">Raster-address arithmetic</a>
+          <a class="pill" href="family_geometry_layout.html">Geometry / layout handling</a>
+          <span class="pill current">Directory metadata state</span>
+        </div>
+      </div>
+    </section>
+
+    <main class="wrap">
+      <section class="report-section">
+        <div class="section-header">
+          <div class="section-num">Coverage snapshot</div>
+          <h2>Most complete evidence chain of the three families</h2>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card">
+            <h3><span class="stat-number">5 / 5</span>Historical bugs / bugs found</h3>
+            <p>The detector coverage matrix reports complete historical coverage for this family.</p>
+          </article>
+          <article class="stat-card">
+            <h3><span class="stat-number">0</span>False positives</h3>
+            <p>No false positives are listed in the family coverage summary.</p>
+          </article>
+          <article class="stat-card">
+            <h3><span class="stat-number">4</span>Highlighted members</h3>
+            <p>Four representative tif_dirread issues carry the query and backtest evidence shown below.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="report-section">
+        <div class="section-header">
+          <div class="section-num">Family overview</div>
+          <h2>What this family covers</h2>
+        </div>
+        <article class="finding-card">
+          <h3 class="merged-card-title">Directory-metadata state in libtiff/tif_dirread.c</h3>
+          <p class="finding-summary">
+            Directory-field normalization and validation-query coverage are the
+            clearest control candidates for this cluster. Query and backtest
+            artifacts already exist across multiple members, even though the
+            family still lacks a witness-grade reproduction.
+          </p>
+          <div class="finding-callout">
+            <strong>Prevention strategy</strong>
+            <p>Directory-field normalization and validation-query coverage</p>
+          </div>
+          <div class="finding-callout">
+            <strong>Current evidence</strong>
+            <p><span class="status-chip">Query validated</span></p>
+          </div>
+          <div class="finding-callout">
+            <strong>Supporting issues</strong>
+            <p>CVE-2022-0561, CVE-2022-0562, CVE-2022-0908, CVE-2022-1354</p>
+          </div>
+          <div class="finding-callout">
+            <strong>Still missing</strong>
+            <p>Witness-grade reproduction for at least one tif_dirread family member</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="report-section">
+        <div class="section-header">
+          <div class="section-num">Representative issue</div>
+          <h2>Detailed breakout card</h2>
+        </div>
+        <article class="finding-card">
+          <div class="finding-card-header">
+            <div>
+              <div class="finding-issue-id">CVE-2022-0561</div>
+              <h3 class="merged-card-title">Null source pointer passed as an argument to memcpy() function within TIFFFetchStripThing() in tif_dirread</h3>
+            </div>
+            <span class="severity-badge">Medium</span>
+          </div>
+          <p class="finding-summary">Directory-state member with validation-query and backtest artifacts.</p>
+          <div class="finding-callout">
+            <strong>Why featured</strong>
+            <p>It is the clearest single example of the family and already carries the full query plus backtest bundle.</p>
+          </div>
+          <div class="finding-callout">
+            <strong>Code path</strong>
+            <p>libtiff/tif_dirread.c - TIFFFetchStripThing</p>
+          </div>
+          <details class="drawer">
+            <summary>Code excerpt</summary>
+            <pre>7783: err = TIFFReadDirEntryLong8ArrayWithLimit(tif, dir, &data, nstrips);
+7791: if (dir->tdir_count < (uint64_t)nstrips)
+7809: const uint64_t allocsize = (uint64_t)nstrips * sizeof(uint64_t);
+7828: resizeddata = (uint64_t *)_TIFFCheckMalloc(
+7836:     _TIFFmemcpy(resizeddata, data,
+7838:     _TIFFmemset(resizeddata + (uint32_t)dir->tdir_count, 0,</pre>
+          </details>
+          <details class="drawer">
+            <summary>Linked artifacts</summary>
+            <ul class="clean-list artifact-list">
+              <li><a href="../reports/report:libtiff:20260312T230034Z/detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql">Shared validation query</a></li>
+              <li><a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/pre.sarif">Pre-fix backtest</a></li>
+              <li><a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/fix.sarif">Fix backtest</a></li>
+              <li><a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/head.sarif">Head backtest</a></li>
+            </ul>
+          </details>
+        </article>
+      </section>
+
+      <section class="report-section">
+        <div class="section-header">
+          <div class="section-num">Additional members</div>
+          <h2>Other highlighted directory-state cases</h2>
+        </div>
+        <div class="finding-grid support">
+          <article class="finding-card support-card">
+            <div class="finding-issue-id">CVE-2022-0562</div>
+            <h3 class="merged-card-title">Null source pointer passed as an argument to memcpy() function within TIFFReadDirectory() in tif_dirread</h3>
+            <p>Directory reader sample-info normalization path with the same shared query and backtest bundle.</p>
+            <div class="support-links">
+              <a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/pre.sarif">Pre-fix backtest</a>
+              <a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/fix.sarif">Fix backtest</a>
+              <a href="../reports/report:libtiff:20260312T230034Z/detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql">Shared query</a>
+            </div>
+          </article>
+
+          <article class="finding-card support-card">
+            <div class="finding-issue-id">CVE-2022-0908</div>
+            <h3 class="merged-card-title">Null source pointer passed as an argument to memcpy() function within TIFFFetchNormalTag () in tif_dirread</h3>
+            <p>Normal-tag ASCII handling case that broadens the same directory-state detector story to another parsing path.</p>
+            <div class="support-links">
+              <a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/pre.sarif">Pre-fix backtest</a>
+              <a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/fix.sarif">Fix backtest</a>
+              <a href="../reports/report:libtiff:20260312T230034Z/detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql">Shared query</a>
+            </div>
+          </article>
+
+          <article class="finding-card support-card">
+            <div class="finding-issue-id">CVE-2022-1354</div>
+            <h3 class="merged-card-title">A heap buffer overflow flaw was found in Libtiffs' tiffinfo</h3>
+            <p>OJPEG strip-array setup case that shows the family also reaches later array-state corruption, not just null-copy semantics.</p>
+            <div class="support-links">
+              <a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/pre.sarif">Pre-fix backtest</a>
+              <a href="../reports/report:libtiff:20260312T230034Z/issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/fix.sarif">Fix backtest</a>
+              <a href="../reports/report:libtiff:20260312T230034Z/detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql">Shared query</a>
+            </div>
+          </article>
+        </div>
+        <p class="note">
+          The main detector matrix shows five covered historical bugs for this
+          family. This page breaks out the four explicitly named support cases
+          from the original report narrative.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

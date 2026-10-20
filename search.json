@@ -1,0 +1,233 @@
+[
+  {
+    "objectID": "posts/telnetd_cve/index.html#the-bug",
+    "href": "posts/telnetd_cve/index.html#the-bug",
+    "title": "Catching the Next telnetd-Class Security Bug",
+    "section": "The Bug",
+    "text": "The Bug\nThe issue was disclosed by Simon Josefsson on oss-sec:\nhttps://seclists.org/oss-sec/2026/q1/89\nThe exploit itself is embarrassingly simple:\nUSER='-f root' telnet -a localhost\ntelnetd accepted an attacker-controlled environment variable and passed it through to /usr/bin/login. Because of how login parses its arguments, -f root is interpreted as “trusted login for root,” skipping authentication entirely.\nAttacker-provided data is passed to the login system unchecked."
+  },
+  {
+    "objectID": "posts/telnetd_cve/index.html#the-real-failure",
+    "href": "posts/telnetd_cve/index.html#the-real-failure",
+    "title": "Catching the Next telnetd-Class Security Bug",
+    "section": "The Real Failure",
+    "text": "The Real Failure\nThis was not a clever exploit. It was a systems failure.\nThe bug existed because no one stopped to ask: what assumptions does this change rely on, and are those assumptions still true?\nThis happens all the time. Developers fix a local problem without reasoning about downstream effects. The change works in isolation, tests pass, and everything looks fine. Later, a fundamental assumption is quietly violated somewhere else.\nWithout a system that forces those assumptions to be stated and checked, this kind of bug is inevitable.\n\nThe failure wasn’t a coding mistake; it was an architectural assumption that was never written down."
+  },
+  {
+    "objectID": "posts/telnetd_cve/index.html#check-your-assumptions",
+    "href": "posts/telnetd_cve/index.html#check-your-assumptions",
+    "title": "Catching the Next telnetd-Class Security Bug",
+    "section": "Check Your Assumptions",
+    "text": "Check Your Assumptions\nThe critical assumption that went unchecked here was simple:\n\nAttacker-controlled data must not activate privileged authentication modes across the telnetd → login boundary.\n\nSaid another way: data originating from the network must not reach the authentication subsystem in a form that can influence privileged behavior.\nThat assumption was violated.\nIf, from the beginning, there had been a mechanism to state that assumption explicitly and check that it could never be violated, this bug would not have survived (regardless of how many refactors or feature changes happened later)."
+  },
+  {
+    "objectID": "posts/telnetd_cve/index.html#how-to-build-an-assumption-checker",
+    "href": "posts/telnetd_cve/index.html#how-to-build-an-assumption-checker",
+    "title": "Catching the Next telnetd-Class Security Bug",
+    "section": "How to Build an Assumption Checker",
+    "text": "How to Build an Assumption Checker\nThe workflow is deliberately narrow. The point is not to model everything, but to model the right thing.\n\nIdentify the trust boundary Decide what is trusted and what is tainted. In this case, network input is untrusted. The authentication service is trusted. Data must not cross that boundary without being checked.\nMake assumptions explicit Write down the security assumptions the system relies on, as properties the system must satisfy.\nModel the boundary (not the whole program) You do not need to model telnet, terminals, or networking. Only the data flow across the boundary that matters.\nState the invariant For example: a privileged session must imply proper authentication, and privileged authentication modes must not be triggered by untrusted input.\nLet the checker search for counterexamples If the assumption is wrong, the model checker will produce a concrete trace showing how it can be violated.\nTranslate findings into fixes and regression tests Sanitization rules, allowlists, and tests fall out naturally once the violation is explicit.\n\nAn agent-assisted workflow makes steps 2–4 fast enough to be practical.\nThe agent doesn’t “find bugs”. It helps turn vague assumptions into precise, checkable models.\nWe’ve published the full trust-boundary analysis report used for this example, including the formal model, invariants, counterexample trace, and engineering fixes:\nTrust Boundary Security Analysis Report: telnetd (PDF) download"
+  },
+  {
+    "objectID": "posts/telnetd_cve/index.html#what-this-does-not-cover",
+    "href": "posts/telnetd_cve/index.html#what-this-does-not-cover",
+    "title": "Catching the Next telnetd-Class Security Bug",
+    "section": "What This Does Not Cover",
+    "text": "What This Does Not Cover\nThis approach is intentionally scoped:\n\nIt does not verify full implementations.\nIt does not eliminate all bugs.\nIt only checks the invariants you specify.\n\nWhat it does do is surface structural failure modes early (before they sit quietly in production for ten years)."
+  },
+  {
+    "objectID": "posts/telnetd_cve/index.html#the-takeaway",
+    "href": "posts/telnetd_cve/index.html#the-takeaway",
+    "title": "Catching the Next telnetd-Class Security Bug",
+    "section": "The Takeaway",
+    "text": "The Takeaway\nLong-lived security bugs don’t survive because teams are careless. They survive because assumptions stay implicit.\nIf you want to catch the next telnetd-class bug, you don’t need magic tools. You need a process that forces assumptions at trust boundaries to be written down, checked, and enforced, continuously.\nThat’s what this workflow is designed to do."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#llm-as-a-judge",
+    "href": "posts/mem_safe_eval2/index.html#llm-as-a-judge",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "LLM as a Judge",
+    "text": "LLM as a Judge\nPrior work has explored the use of large language models as evaluators of model outputs and annotations. In particular, Judging LLM-as-a-Judge (Liu et al. 2023) reports high agreement between LLM judgments and human raters across a range of evaluation tasks.\nThese results do not imply that LLMs are universally reliable judges. However, they suggest that LLMs can plausibly be used for constrained judgment tasks when the task definition is clear and the output space is limited.\nThe task in this work, deciding whether two code examples exhibit the same underlying vulnerability is intentionally framed as a pairwise judgment. Pairwise decisions of same versus not same are substantially more direct than assigning a vulnerability to a position in a predefined taxonomy. Hierarchical ambiguity and cause effect conflation, which complicate CWE labeling, do not arise in the same way.\nBy treating pairwise comparison as the primitive operation, we avoid committing to a rigid taxonomy upfront. Instead, equivalence judgments can serve as the foundation for later structure, rather than being constrained by it."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#trust-but-verify",
+    "href": "posts/mem_safe_eval2/index.html#trust-but-verify",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "Trust, but Verify",
+    "text": "Trust, but Verify\nAny use of automated judgment requires explicit verification. LLM based analysis was therefore audited at each stage of the process. Custom UI tooling was built to support efficient human review, allowing us to inspect code, patches, and model rationales side by side.\nAfter the initial analysis pass, results were spot-checked across multiple groupings. These checks were broadly aligned with human judgment and did not reveal systematic disagreement. While this does not establish correctness in an absolute sense, it provides confidence that the judgments are usable when combined with explicit refusal outcomes and human oversight."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#reducing-the-comparison-space",
+    "href": "posts/mem_safe_eval2/index.html#reducing-the-comparison-space",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "Reducing the Comparison Space",
+    "text": "Reducing the Comparison Space\nEven with automated judgment, exhaustive pairwise comparison is infeasible. Comparing 1,300 items yields 844,350 possible pairs, which is prohibitively expensive and unnecessary. Most comparisons are uninformative, as many vulnerabilities are clearly unrelated.\nTo make pairwise judgment tractable, we introduce a grouping strategy. This reintroduces a form of taxonomy, but with a different purpose and constraint. The groups are not intended to define vulnerability classes. They serve only as lightweight scaffolding to group plausibly related items and reduce the comparison space.\nCrucially, this structure is defined loosely and refined iteratively, allowing the data to guide its evolution. Taxonomy here is an instrument for efficiency, not a claim about ground truth."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#unit-of-analysis",
+    "href": "posts/mem_safe_eval2/index.html#unit-of-analysis",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "Unit of Analysis",
+    "text": "Unit of Analysis\n\n\n\nDiagram 1\n\n\nAlthough we start from CVEs, the unit of analysis in MemSafeEval is a vulnerable code sample: a patch local, function-level region sufficient to explain the bug and its fix. The process starts by querying all the CVEs that have weaknesses in any of the memory vulnerability categories. If the CVE has a git commit and that commit contains C or C++ the source code is downloaded. The vulnerable files plus the patch with the fix are given to an LLM to extract the code samples. A single CVE may yield zero, one, or multiple vulnerable samples, depending on how many distinct vulnerable sites are present. This distinction is important. CVEs are reporting artifacts; code samples are the objects that exhibit failure mechanisms and can be compared meaningfully. If no suitable vulnerable function can be identified, the model is instructed to return an insufficient_information message. The validated samples are then saved into a database for use in the next step of the process."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#primary-analysis",
+    "href": "posts/mem_safe_eval2/index.html#primary-analysis",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "Primary Analysis",
+    "text": "Primary Analysis\n\n\n\nDiagram 2\n\n\nEach sample is then analyzed along the axes of a provisional schema. The LLM selects the category element that best matches the value for each axis. If no existing element is appropriate, the model will return OTHER along with a brief explanation or suggested new category. These OTHER cases are reviewed periodically, and recurring patterns are promoted into the schema.\nThe intent of this process is iterative refinement. As more CVEs are analyzed, the schema should stabilize and the number of OTHER classifications should decrease.\nIn addition to structured labels, the analysis phase records the vulnerable function or functions, a concise summary, and free-form tags. Crucially, the LLM is explicitly encouraged to return unevaluatable when insufficient evidence is available to make a reliable judgment.\nI ran this process expecting that the schema would quickly converge on a small set of category elements. The distribution of labels was expected to follow an 80/20 pattern, with a small number of categories covering most cases. Instead, the first schema was too granular: many samples required special-case labels. Far too many OTHER values were found when analyzing the samples.\nThe problem was one of granularity. The categories were neither stable nor reusable.\nI reset the schema to be deliberately broader and less precise aiming for a more mid-level of granularity. Repeating the analysis under this new revised schema led to rapid convergence: the number of OTHER classifications dropped quickly, and the remaining enumerations filled in quickly."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#the-stabilized-schema",
+    "href": "posts/mem_safe_eval2/index.html#the-stabilized-schema",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "The Stabilized Schema",
+    "text": "The Stabilized Schema\nThe final schema converged on three categories:\n\nPrimary Vulnerability Category: the class of invariant that is violated (buffer overflow, use after free, type confusion …)\nTrigger: the immediate causal mistake that leads to the violation\n(e.g., missing bounds check, integer truncation, stale pointer, misuse of a length field)\nSink: the function, operation, or language construct through which the violation manifests (pointer dereference, array indexing, free() …)\n\nIf any of these properties cannot be determined without speculation, the analysis is rejected.\nThis decomposition separates the vulnerability mechanism from irrelevant details (patch shape, naming conventions, code style), and provides a basis for judgment that doesn’t depend on taxonomy labels.\nThese axes are semi-orthogonal, limited in scope, and expressive enough to group similar vulnerabilities without being predetermined. Together, they constrain classification while leaving room for judgment where the code itself is ambiguous.\nFor the purposes of bucketing and comparison, the three values are combined into a vulnerability signature. The signature is not intended to define sameness. It serves only to group plausibly related code samples and reduce the space of pairwise comparisons.\nTo validate the analysis process, we spot checked 30 analyzed samples across 10 distinct buckets. No material disagreements were found. Custom tooling was built to support this review, including Streamlit based interfaces that allow auditors to quickly inspect code, metadata, and model outputs in a searchable format."
+  },
+  {
+    "objectID": "posts/mem_safe_eval2/index.html#signature-is-not-sameness",
+    "href": "posts/mem_safe_eval2/index.html#signature-is-not-sameness",
+    "title": "MemSafeEval Part 2: When Are Two Bugs the Same Bug?",
+    "section": "Signature Is Not Sameness",
+    "text": "Signature Is Not Sameness\n\n\n\nCVE Match Review\n\n\nThis example illustrates a central constraint of the approach: signatures are not intended to define equivalence. They are deliberately coarse, designed to group plausibly related vulnerabilities while preserving the need for direct judgment. Two samples may share a signature and still represent meaningfully different bugs.\n\n\n\nAnalyses Marked as OTHER\n\n\nEqually important, the analysis process allows explicit refusal. When a code sample does not clearly demonstrate a memory-safety failure, it is marked as OTHER rather than coerced into an ill-fitting category. This prevents noise from propagating into later stages of comparison and training.\nThis process resulted in 67 broad signature types. As expected, the distribution of examples across signatures followed a power-law pattern, with the majority of samples concentrated in a small number of categories.\n\n\n\nSignature outcomes overview\n\n\nAt this point, the problem was no longer defining sameness, but achieving sufficient coverage across signature types. While out-of-bounds access vulnerabilities were well represented, most OTHER signatures lacked enough positive pairs for training. The next article addresses this bottleneck by introducing synthetic, automatically verified examples.\nPart 3: Building a Synthetic Dataset for Weakness Embeddings\n\nI’m turning this into a repeatable playbook for custom embeddings + evaluation loops. If you want to sanity-check your own pipeline or talk through an approach, book a call below."
+  },
+  {
+    "objectID": "thank-you.html",
+    "href": "thank-you.html",
+    "title": "Thank You",
+    "section": "",
+    "text": "Thanks for booking\nYour session is confirmed. You’ll get a calendar invite with the meeting link and details shortly.\n\nNeed to adjust the time? Reschedule here.\nHave questions before we meet? Email brian@vartia.ai.\n\nBack to home"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About\n    Writing\n    Book a Consult\n  \n\n\n\n\n  \n    Practical AI for businesses and teams.\n    Vartia is a small consultancy that helps organizations figure out where AI fits, set it up, and make it work reliably.\n  \n\n  \n    Why Vartia\n    \n      AI tools are everywhere, and most businesses can tell they should be using them. The hard part\n      is knowing where to start: which tools are worth paying for, what is safe to hand off, and what\n      will actually save time instead of creating more work.\n    \n    \n      We have spent our careers building software, including machine learning systems at Apple.\n      We use that experience to cut through the noise and get you something that works.\n    \n  \n\n  \n    Our Approach\n    \n      We start with your work, not the technology. We learn how your team spends its time, find the\n      tasks where AI can help, and test options on real examples before recommending anything.\n    \n    \n      Then we set it up: configuring off-the-shelf tools where they fit, building custom ones where\n      they don't, and helping your team use them with confidence. You end up with tools that work and\n      a clear picture of what they can and can't do.\n    \n  \n\n  \n    Who\n    \n\n      \n        Brian Williams\n        Founder & Lead Engineer\n        \n          Two decades of production software engineering across mobile, embedded, and ML systems.\n          Previously ML Engineer at Apple; senior software architect at multiple startups.\n          MS in Human-Computer Interaction from Carnegie Mellon.\n          Focuses on applied AI: evaluating models, building LLM-based tools, and making them reliable\n          enough to depend on.\n        \n      \n\n      \n        Albert Papp, Ph.D.\n        Software Architect\n        \n          25+ years spanning enterprise networking, medical devices, and consumer software.\n          Multiple patents for user-centric solutions to complex technical problems.\n          Former Director of Software. At Vartia, focuses on LLM-assisted engineering workflows\n          and spec-to-code automation that preserve quality.\n        \n      \n\n    \n  \n\n  \n    What an Engagement Looks Like\n    \n      \n        01\n        \n          Intro Call\n          We talk through your business, where your time goes, and what you have already tried. Free, 30 minutes.\n        \n      \n      \n        02\n        \n          Assessment\n          We look at your workflows, try AI options on real examples, and recommend where to start.\n        \n      \n      \n        03\n        \n          Setup & Support\n          We set up the tools, build anything custom, and help your team get comfortable with them. We stay available as your needs change.\n        \n      \n    \n  \n\n  \n    Curious what AI could do for your business?\n    \n      Book a Free Consult\n      brian@vartia.ai\n    \n  \n\n\n\n\n  © 2026 Vartia. All rights reserved."
+  },
+  {
+    "objectID": "index.html#writing",
+    "href": "index.html#writing",
+    "title": "Practical help putting AI to work.",
+    "section": "Writing",
+    "text": "Writing"
+  },
+  {
+    "objectID": "book.html",
+    "href": "book.html",
+    "title": "Book a Consult",
+    "section": "",
+    "text": "About\n    Writing\n    Book a Consult\n  \n\n\nBook a Consult\nInterested in working together? Book a free call to talk about your business, where your time goes, and whether AI can help.\n\n\n\n\n\n  © 2026 Vartia. All rights reserved."
+  },
+  {
+    "objectID": "posts/mem_safe_eval1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
+    "href": "posts/mem_safe_eval1/index.html#classifying-vulnerabilities-the-easy-baseline-that-wasnt",
+    "title": "MemSafeEval Part 1: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t",
+    "text": "Classifying Vulnerabilities: The Easy Baseline That Wasn’t\nI began by running a simple baseline experiment: test whether state-of-the-art LLMs can correctly classify real security vulnerabilities.\nThe source data was the Common Vulnerabilities and Exposures (CVE) database. CVEs include natural-language descriptions, one or more Common Weakness Enumeration (CWE) labels, and often the code patch that fixed the issue.\nI downloaded roughly 20 years of CVE data from NIST and filtered for memory-safety-related CWEs. CVEs with available GitHub commits were converted into a dataset of vulnerable functions paired with their assigned weaknesses.\nThe result:\n\n~1300 CVEs\n79% had a single CWE label\n\nThe task given to the LLMs was intentionally simple:\n\nGiven the vulnerable code and its patch, return one or more CWEs that describe the weakness.\n\nIf the model returned any CWE listed in the CVE record, it was considered correct. Hierarchical matching was not allowed. This was meant to be a loose baseline, not a strict evaluation.\nI assumed modern LLMs would perform extremely well.\nThey did not.\nFrontier models returned a correct CWE less than 50% of the time."
+  },
+  {
+    "objectID": "posts/mem_safe_eval1/index.html#are-we-asking-the-wrong-question",
+    "href": "posts/mem_safe_eval1/index.html#are-we-asking-the-wrong-question",
+    "title": "MemSafeEval Part 1: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Are We Asking the Wrong Question?",
+    "text": "Are We Asking the Wrong Question?\nThis failure raises a deeper question:\n\nAre top-down CWE taxonomies compatible with code-centric evaluation at all?\n\nAfter digging into the dataset, the answer became clear: the problem is not the models—it is the labels.\nCWEs are assigned manually through a community-driven process spanning decades. That process is valuable, but it struggles to produce consistent, fine-grained, code-level classifications.\nThis is not an argument that CWEs are incorrect or useless.\nIt is an argument that they are misaligned with the task of classifying vulnerabilities directly from code."
+  },
+  {
+    "objectID": "posts/mem_safe_eval1/index.html#look-at-your-data",
+    "href": "posts/mem_safe_eval1/index.html#look-at-your-data",
+    "title": "MemSafeEval Part 1: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Look at Your Data",
+    "text": "Look at Your Data\nTo understand what was happening, I looked at the label distribution.\n\n\n\nHistogram of CVEs by CWE label\n\n\nThe dataset is extremely imbalanced. A small number of CWEs dominate the majority of examples.\nNext, I examined where the model was wrong.\n\n\n\nConfusion matrix for CWE prediction\n\n\nThis confusion matrix is a comparison of the dataset label and the LLM predicted label. Correct predictions are found on the diagonal. All of the non-diagonal cells show a count of that type of misprediction.\nThe errors are not random. They cluster.\nCWE-119 is both:\n\nthe most over-predicted label (predicted as 119 when not)\nthe most under-predicted label (predicted as not 119 when it was)\n\nThis makes sense. CWE-119 (“Improper Restriction of Operations within the Bounds of a Memory Buffer”) is a parent of CWE-120, CWE-125, CWE-787, and a grandparent of others like CWE-121 and CWE-122.\nIt acts as a semantic catch-all."
+  },
+  {
+    "objectID": "posts/mem_safe_eval1/index.html#when-two-labels-are-both-correct",
+    "href": "posts/mem_safe_eval1/index.html#when-two-labels-are-both-correct",
+    "title": "MemSafeEval Part 1: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "When Two Labels Are Both Correct",
+    "text": "When Two Labels Are Both Correct\nConsider CWE-122 (Heap-based Buffer Overflow) and CWE-787 (Out-of-Bounds Write).\nFor CVE-2025-54949, the official label is CWE-122. The LLM predicted CWE-787.\nThe code uses memcpy to copy data into a heap buffer without verifying that the buffer has sufficient space.\nBoth labels are correct.\n\nThe mechanism is an out-of-bounds write.\nThe consequence is a heap-based buffer overflow.\n\nThe CWE hierarchy forces a choice. The code does not."
+  },
+  {
+    "objectID": "posts/mem_safe_eval1/index.html#why-bottom-up-classification-matters",
+    "href": "posts/mem_safe_eval1/index.html#why-bottom-up-classification-matters",
+    "title": "MemSafeEval Part 1: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "Why Bottom-Up Classification Matters",
+    "text": "Why Bottom-Up Classification Matters\nThe goal was never to reproduce CWE assignments.\nThe goal was to classify vulnerabilities as they manifest in code.\nTop-down labeling forces models to guess which level of abstraction the human annotator chose. That information is often absent from the code itself.\nTo build a code-centric evaluation system, weakness categories must be derived bottom-up, from concrete failure modes observed in real code—not imposed from a predefined hierarchy."
+  },
+  {
+    "objectID": "posts/mem_safe_eval1/index.html#whats-next",
+    "href": "posts/mem_safe_eval1/index.html#whats-next",
+    "title": "MemSafeEval Part 1: A Bottom-Up Classification of Memory Safety Vulnerabilities in C and C++",
+    "section": "What’s Next",
+    "text": "What’s Next\nIn the next article, I’ll describe how I built a bottom-up taxonomy for memory safety vulnerabilities, derived directly from observed code patterns rather than inherited labels.\nThat taxonomy is the foundation of MemSafeEval.\nPart 2: When are 2 bugs the same bug"
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#what-makes-a-good-code-sample",
+    "href": "posts/mem_safe_eval3/index.html#what-makes-a-good-code-sample",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "What Makes a Good Code Sample",
+    "text": "What Makes a Good Code Sample\nNot all code samples are equally useful for training embeddings. A good synthetic code sample needs to satisfy several constraints simultaneously:\n\nIt embodies the same vulnerability mechanism as the original code sample.\nIt looks like it came from a real production codebase:\n\nnon-trivial control flow\ncustom data structures\nrealistic naming and structure\nIt has no obvious tells that it is synthetic.\n\nIt is easy to compile, run, and instrument.\nMost importantly, it can be validated algorithmically:\n\nno human judgment\nno “looks right” reasoning\nthe bug either triggers or it doesn’t\n\n\nIf a code sample cannot be verified automatically, it is not suitable as training data."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#why-pairs-and-why-negatives-matter",
+    "href": "posts/mem_safe_eval3/index.html#why-pairs-and-why-negatives-matter",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Why Pairs — and Why Negatives Matter",
+    "text": "Why Pairs — and Why Negatives Matter\nThe goal of this dataset is to train embeddings, not a simple classifier. Embeddings learn by comparing code samples to one another. As mentioned in article 2, the final pairs are determined by using an LLM to judge if a pair is the same.\nThat means we need:\n\nPositive pairs: two code samples of the same vulnerability\nNegative pairs: code samples of different vulnerability\n\nBut there is a third, critical category: hard negative pairs.\nA hard negative pair consists of a vulnerable sample and its patched version. The hard negative sample is identical to the positive sample in every meaningful way except for the bug itself. In this project, the most important hard negative samples are the patched versions of the vulnerable functions.\nThese hard negative pairs force the model to learn what actually matters. They prevent superficially similar but fundamentally different bugs from collapsing into the same cluster. Without them, the model learns the wrong signal.\nIn short:\n\npositives pull embeddings together\nnegatives push them apart\nhard negatives sharpen the boundary"
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#how-do-we-know-the-code-samples-are-correct",
+    "href": "posts/mem_safe_eval3/index.html#how-do-we-know-the-code-samples-are-correct",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "How Do We Know the Code Samples are Correct",
+    "text": "How Do We Know the Code Samples are Correct\nBad labels poison embedding training. Empirically, even modest label corruption measurably degrades learned representations and downstream accuracy (Li et al. 2022).\nBecause of this, every code sample used for training, must be generated and validated through a repeatable, unambiguous process.\nThat process starts with precise definitions."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#defining-the-vulnerability-precisely",
+    "href": "posts/mem_safe_eval3/index.html#defining-the-vulnerability-precisely",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Defining the Vulnerability Precisely",
+    "text": "Defining the Vulnerability Precisely\nAs in earlier stages of the project, manually writing detailed definitions for all 67 signature types was not practical. Instead, we used a structured process to derive canonical vulnerability definitions from the existing code samples.\nFor each signature type, an LLM was used to:\n\nsummarize the defining characteristics of the vulnerability\nidentify what must be present for the bug to exist\nidentify what must not be present\ndescribe how the vulnerability is typically fixed\n\nThese definitions were captured in what we call a vulnerability card.\nEach vulnerability card includes:\n\na natural-language definition of the bug\nconstraints on how it should appear in code\ninstructions for creating both a vulnerable version and a fixed version\nguidance on how the vulnerability should be triggered and detected\n\nBased on this vulnerability card, a local coding agent generates:\n\na new vulnerable code sample\nthe corresponding fix\na script to compile, instrument, and verify both\n\nThe script is the source of truth. If it passes, the code sample is accepted. Additional human spot checking is also needed to verify the accuracy of the script and code samples."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#single-code-sample-generation-loop",
+    "href": "posts/mem_safe_eval3/index.html#single-code-sample-generation-loop",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Single Code Sample Generation Loop",
+    "text": "Single Code Sample Generation Loop\nThe initial setup for each signature type follows a tight feedback loop:\n\nThe agent reads the vulnerability card.\nThe agent produces a code sample containing the vulnerability.\nThe agent adds code to reliably trigger the vulnerability.\nThe agent writes an evaluation harness to compile, instrument and validate the code sample.\nThe evaluation harness is executed to confirm the vulnerability triggers.\nIf validation fails too frequently the vulnerability card or code sample is updated.\n\nThis loop continues until one fully validated code sample exists for the signature type, along with a reliable validation script.\nAt this point, the signature type is ready for scaling.\nThen all the evaluation harnesses across the signature types are compared and a set of canonical evaluation harnesses are created. We ended up with 8 classes of evaluation harness for the 67 signature types."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#batch-code-sample-generation",
+    "href": "posts/mem_safe_eval3/index.html#batch-code-sample-generation",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Batch Code Sample Generation",
+    "text": "Batch Code Sample Generation\nOnce the environment is stable, batch generation begins.\nA secondary, cheaper model is invoked with a simplified prompt:\n\ngenerate a new vulnerable code sample matching the vulnerability card\ngenerate the corresponding fix\n\nEach generated pair is placed in its own directory and validated using the same script. If validation passes, the code sample is accepted. If it fails, the code sample is rejected.\nWhen failure rates are high, the vulnerability card is refined and the process repeats. This continues until most generated code samples are accepted. Once a signature type reaches its target number of code samples, it is considered complete."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#expanding-coverage-by-enumerating-subtypes-within-a-signature-type",
+    "href": "posts/mem_safe_eval3/index.html#expanding-coverage-by-enumerating-subtypes-within-a-signature-type",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Expanding Coverage by Enumerating Subtypes Within a Signature Type",
+    "text": "Expanding Coverage by Enumerating Subtypes Within a Signature Type\nEven with a stable signature definition, each signature type usually contains multiple subtypes (distinct ways the same underlying vulnerability shows up in real code). If we don’t cover those subtypes, the embedding model risks learning only limited instances of the signature type.\nThe generation strategy is then:\n\nFor each signature type, generate a subtype checklist.\nRequire the generator to produce code samples for each subtype, not just “another random sample.”\nValidate each candidate with the same evaluation harness (sanitizers + trigger), and accept only code samples that pass.\nTrack subtype coverage in the dashboard, so “30 code samples per signature type” is now “30 code samples per subtype”.\n\nThis turns synthetic data generation into a deliberate coverage plan: not just more data, but representative data across the realistic ways a vulnerability occurs."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#increasing-diversity-without-excess-llm-calls",
+    "href": "posts/mem_safe_eval3/index.html#increasing-diversity-without-excess-llm-calls",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Increasing Diversity Without Excess LLM Calls",
+    "text": "Increasing Diversity Without Excess LLM Calls\nAfter a stable pool of validated code samples exists, diversity can be expanded further by:\n\nrenaming variables and data structures using AST-based transformations\nreorganizing code layout\nslicing functions from larger real-world codebases and injecting the vulnerability\ntemplate seeding from real code: pull small, non-vulnerable functions from other codebases as “style templates,” then inject the same vulnerability pattern into those templates and slice the resulting function into the dataset.\n\nThese transformations preserve the vulnerability semantics while increasing stylistic variation, reducing the need for additional LLM calls."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#human-in-the-loop",
+    "href": "posts/mem_safe_eval3/index.html#human-in-the-loop",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Human in the Loop",
+    "text": "Human in the Loop\nAlthough the system is largely automated, human oversight is still essential.\nA Streamlit-based inspection tool was built to:\n\ntrack success and failure rates per signature type\ninspect validated and rejected code samples\nspot-check generated code for subtle errors\n\nSpot-checking a small number of code samples per signature type provides confidence that the system is behaving as intended."
+  },
+  {
+    "objectID": "posts/mem_safe_eval3/index.html#wrapping-up",
+    "href": "posts/mem_safe_eval3/index.html#wrapping-up",
+    "title": "MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier",
+    "section": "Wrapping Up",
+    "text": "Wrapping Up\nBy the end of this process, each vulnerability signature type has:\n\na precise definition\na reliable evaluation harness\na growing pool of validated vulnerable and fixed code samples\npositive, negative, and hard-negative pairs suitable for embedding training\n\nThis synthetic dataset forms the foundation for the next step: training and evaluating embeddings that capture the true structure of software vulnerability.\n\nI’m turning this into a repeatable playbook for custom embeddings + evaluation loops. If you want to sanity-check your own pipeline or talk through an approach, book a call below."
+  }
+]

@@ -1,0 +1,3396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      LibTIFF · historical_vulnerability_pattern_analysis — Vartia.ai
+    </title>
+    <base href="../reports/report:libtiff:20260312T230034Z/" />
+    <style>
+      :root {
+        --bg: #080808;
+        --bg2: #0d0d0d;
+        --bg-soft: #0d0d0d;
+        --surface: #111111;
+        --surface2: #161616;
+        --panel: #111111;
+        --panel-strong: #181818;
+        --grid: rgba(255, 255, 255, 0.08);
+        --grid-fine: rgba(255, 255, 255, 0.03);
+        --border: rgba(255, 255, 255, 0.1);
+        --border-hi: rgba(255, 255, 255, 0.2);
+        --text: #e5e5e5;
+        --text2: #cccccc;
+        --text-soft: #cccccc;
+        --text-muted: #c8c8c8;
+        --text-dim: #9a9a9a;
+        --white: #f5f5f5;
+        --red: #ef4444;
+        --red-dim: rgba(239, 68, 68, 0.1);
+        --red-mid: rgba(239, 68, 68, 0.22);
+        --green: #22c55e;
+        --green-dim: rgba(34, 197, 94, 0.1);
+        --green-mid: rgba(34, 197, 94, 0.22);
+        --amber: #f59e0b;
+        --amber-dim: rgba(245, 158, 11, 0.1);
+        --amber-mid: rgba(245, 158, 11, 0.22);
+        --blue: #3b82f6;
+        --blue-dim: rgba(59, 130, 246, 0.1);
+        --cyan: #f0a030;
+        --cyan-dim: rgba(240, 160, 48, 0.08);
+        --cyan-mid: rgba(240, 160, 48, 0.2);
+        --cyan-glow: rgba(240, 160, 48, 0.04);
+        --chart-ind: #4a4a4a;
+        --chart-cli: #ef4444;
+        --accent: #f0a030;
+        --accent-warm: #e95c35;
+        --good: #22c55e;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+        --mono:
+          "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", "Menlo",
+          monospace;
+        --sans: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+        --sans-ui: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 19px;
+        line-height: 1.75;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(240, 160, 48, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(240, 160, 48, 0.03) 1px, transparent 1px),
+          linear-gradient(var(--grid-fine) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px);
+        background-size:
+          160px 160px,
+          160px 160px,
+          40px 40px,
+          40px 40px;
+        opacity: 0.4;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--text);
+      }
+
+      pre {
+        margin: 14px 0 0;
+        padding: 18px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #050505;
+        color: var(--text-soft);
+        font: 13px/1.65 var(--mono);
+        white-space: pre-wrap;
+      }
+
+      .wrap {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 40px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .nav-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(8, 8, 8, 0.92);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--grid);
+        padding: 0 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand-text {
+        font-family: var(--sans);
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: var(--white);
+      }
+      .nav-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .accent-bar {
+        position: sticky;
+        top: 56px;
+        z-index: 99;
+        height: 4px;
+      }
+      .accent-line {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+      }
+      .accent-glow,
+      .accent-bloom {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 14px;
+        filter: blur(14px);
+        background: linear-gradient(
+          90deg,
+          rgba(240, 160, 48, 0.5) 0%,
+          rgba(240, 160, 48, 0.6) 20%,
+          rgba(233, 92, 53, 0.5) 80%,
+          rgba(233, 92, 53, 0.4) 100%
+        );
+        pointer-events: none;
+      }
+
+      .hero {
+        padding: 0;
+        border-bottom: none;
+      }
+
+      .hero-inner {
+        padding: 48px 56px 36px;
+        max-width: 1280px;
+        margin: 0 auto;
+        display: block;
+      }
+      .hero h1 {
+        font-family: var(--sans);
+        font-size: clamp(44px, 5.5vw, 64px);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        color: var(--white);
+        margin-bottom: 28px;
+      }
+      .hero h1 span {
+        display: block;
+      }
+      .hero h1 .thin {
+        font-weight: 300;
+        color: var(--text2);
+        font-size: 0.6em;
+        letter-spacing: -0.02em;
+        line-height: 1.4;
+        margin-top: 8px;
+      }
+      .hero-summary-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--surface);
+        table-layout: fixed;
+        white-space: nowrap;
+      }
+      .hero-summary-table th,
+      .hero-summary-table td {
+        padding: 14px 18px;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+      .hero-summary-table thead tr {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .hero-summary-table th {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        font-weight: 500;
+        white-space: normal;
+      }
+      .hero-summary-table th a {
+        color: var(--text-dim);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(240, 160, 48, 0.3);
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .hero-summary-table th a:hover {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+      .hero-summary-table th:first-child {
+        width: 22%;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+      }
+      .hero-summary-table td.row-label {
+        border-right: 1px solid var(--border);
+      }
+      .hero-summary-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .hero-summary-table .row-label {
+        font-size: 13px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        letter-spacing: 0.02em;
+        white-space: normal;
+      }
+      .hero-summary-table .result {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text2);
+      }
+      .hero-summary-table .result.good {
+        color: var(--green);
+      }
+      .hero-sidebar {
+        display: none;
+      }
+      .hero-meta-label,
+      .section-num {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+      .hero-meta-val {
+        font-size: 16px;
+        color: var(--white);
+        line-height: 1.5;
+      }
+      .hero-pills {
+        margin: 0 auto 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-bottom: 24px;
+      }
+
+      .report-section {
+        padding: 64px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .section-header {
+        margin-bottom: 28px;
+      }
+      .section-num {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 0;
+        color: var(--white);
+        font-weight: 700;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+      }
+      .section-num::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .section-header h2 {
+        display: none;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 32px 0 48px;
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+      .footer strong {
+        color: var(--text2);
+      }
+      .footer-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+      }
+
+      @media (max-width: 880px) {
+        .wrap,
+        .nav-bar {
+          padding: 0 24px;
+        }
+        .hero-inner {
+          grid-template-columns: 1fr;
+          gap: 32px;
+          padding: 56px 24px 48px;
+        }
+        .hero-summary-table th,
+        .hero-summary-table td {
+          padding: 10px 12px;
+          font-size: 12px;
+        }
+        .nav-bar {
+          height: auto;
+          min-height: 56px;
+          padding-top: 10px;
+          padding-bottom: 10px;
+          align-items: flex-start;
+        }
+        .nav-bar,
+        .footer {
+          flex-direction: column;
+        }
+        .footer-meta {
+          align-items: flex-start;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .section-header h2 {
+          font-size: 30px;
+        }
+        .hero h1 {
+          font-size: clamp(38px, 12vw, 54px);
+        }
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        border: 1px solid;
+      }
+      .pill-green,
+      .pill-good {
+        background: var(--green-dim);
+        color: var(--green);
+        border-color: var(--green-mid);
+      }
+      .pill-amber,
+      .pill-warn {
+        background: var(--amber-dim);
+        color: var(--amber);
+        border-color: var(--amber-mid);
+      }
+      .pill-red,
+      .pill-danger {
+        background: var(--red-dim);
+        color: var(--red);
+        border-color: var(--red-mid);
+      }
+      .pill-blue {
+        background: var(--blue-dim);
+        color: var(--blue);
+        border-color: rgba(59, 130, 246, 0.22);
+      }
+      .pill-muted {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+        border-color: var(--border-hi);
+      }
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .dot-green {
+        background: var(--green);
+      }
+      .dot-red {
+        background: var(--red);
+      }
+
+      .summary-grid,
+      .dual-columns,
+      .method-grid,
+      .appendix-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+      }
+
+      .summary-card,
+      .comparison-card,
+      .panel,
+      .method-card,
+      .finding-card,
+      .appendix-group {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow:
+          0 0 80px -20px rgba(240, 160, 48, 0.06),
+          0 16px 48px rgba(0, 0, 0, 0.3);
+      }
+
+      .summary-card,
+      .panel,
+      .method-card,
+      .finding-card {
+        padding: 20px;
+      }
+
+      .summary-card h3,
+      .panel h3 {
+        font: 700 17px/1.2 var(--sans);
+        color: var(--text);
+        margin: 0 0 12px;
+      }
+
+      .summary-card p,
+      .panel p {
+        color: var(--text2);
+        font-size: 17px;
+        line-height: 1.7;
+        margin: 0;
+      }
+      .summary-card p + p {
+        margin-top: 16px;
+      }
+
+      .summary-card-emphasis {
+        position: relative;
+        overflow: hidden;
+      }
+      .summary-card-emphasis::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--cyan) 0%, transparent 100%);
+      }
+
+      .clean-list {
+        margin: 0;
+        padding-left: 0;
+        list-style: none;
+      }
+      .clean-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .clean-list li:last-child {
+        border-bottom: none;
+      }
+
+      .bullet-list {
+        margin: 8px 0;
+        padding-left: 24px;
+        list-style: disc;
+      }
+      .bullet-list li {
+        color: var(--text-muted);
+        font-size: 16px;
+        line-height: 1.6;
+        padding: 2px 0;
+      }
+
+      .histogram-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow:
+          0 0 80px -20px rgba(240, 160, 48, 0.06),
+          0 16px 48px rgba(0, 0, 0, 0.3);
+      }
+      .histogram-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+        margin-bottom: 16px;
+      }
+      .histogram-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .histogram-subtitle {
+        font-size: 13px;
+        color: var(--text-dim);
+        margin-top: 4px;
+      }
+      .widget-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+      }
+      .widget-controls-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .widget-pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .widget-select {
+        min-width: 200px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-hi);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        font: 500 14px/1.2 var(--mono);
+      }
+      .pill-button {
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+        color: var(--text);
+      }
+      .pill-button.pill-active {
+        background: var(--red-dim);
+        border-color: var(--red-mid);
+        color: var(--red);
+      }
+      .widget-caption {
+        margin-top: 16px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.03em;
+      }
+      .cohort-note {
+        margin: -24px 0 48px;
+        color: var(--text-dim);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      .cohort-note strong {
+        color: var(--text);
+      }
+      .widget-empty,
+      .widget-empty-note {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+      .widget-empty {
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+      }
+      .comparison-legend {
+        margin-bottom: 58px;
+      }
+      .histogram-legend {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+      .legend-swatch {
+        width: 16px;
+        height: 10px;
+        border-radius: 2px;
+      }
+      .legend-swatch.ind {
+        background: var(--chart-ind);
+      }
+      .legend-swatch.cli {
+        background: var(--chart-cli);
+      }
+
+      .histogram {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        height: 220px;
+        position: relative;
+        border-bottom: 1px solid var(--border);
+      }
+      .histogram::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          to top,
+          transparent 0px,
+          transparent 55px,
+          rgba(255, 255, 255, 0.035) 55px,
+          rgba(255, 255, 255, 0.035) 56px
+        );
+      }
+      .hist-group {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 4px;
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        padding: 0 6px;
+      }
+      .hist-bar {
+        width: 28px;
+        border-radius: 3px 3px 0 0;
+        position: relative;
+        min-height: 0;
+        transition: height 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .hist-bar.ind {
+        background: var(--chart-ind);
+      }
+      .hist-bar.cli {
+        background: var(--chart-cli);
+        min-height: 26px;
+      }
+      .hist-bar-label {
+        position: absolute;
+        top: -26px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .hist-bar.ind .hist-bar-label {
+        color: var(--text-muted);
+      }
+      .hist-bar.cli .hist-bar-label {
+        color: var(--red);
+      }
+      .hist-bar-count {
+        position: absolute;
+        left: 50%;
+        bottom: 6px;
+        transform: translateX(-50%);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1;
+        color: var(--white);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .histogram-cats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 14px;
+        gap: 8px;
+      }
+      .hist-cat {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.3;
+        font-weight: 500;
+      }
+
+      .callout {
+        display: grid;
+        grid-template-columns: 4px 1fr;
+        gap: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        margin-bottom: 48px;
+      }
+      .callout-bar {
+        background: var(--amber);
+      }
+      .callout-body {
+        padding: 18px 24px;
+      }
+      .callout-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--amber);
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+      .callout-text {
+        font-size: 17px;
+        color: var(--text2);
+        line-height: 1.7;
+      }
+      .callout-text strong {
+        color: var(--white);
+        font-weight: 700;
+      }
+      .callout-text code {
+        font-family: var(--mono);
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: var(--text);
+      }
+      .summary-callout {
+        margin-top: 24px;
+        margin-bottom: 0;
+      }
+
+      .breakout-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .breakout-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 32px;
+        position: relative;
+        overflow: hidden;
+      }
+      .breakout-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--cyan) 0%, transparent 100%);
+      }
+      .breakout-card h4 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 4px;
+      }
+      .breakout-card .sub-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+      .mini-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .mini-bar-row:last-child {
+        margin-bottom: 0;
+      }
+      .mini-bar-name {
+        font-size: 14px;
+        color: var(--text2);
+        width: 130px;
+        flex-shrink: 0;
+      }
+      .mini-bar-track {
+        flex: 1;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .mini-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        width: 0;
+      }
+      .mini-bar-fill.red {
+        background: var(--red);
+      }
+      .mini-bar-fill.amber {
+        background: var(--amber);
+      }
+      .mini-bar-fill.muted {
+        background: var(--text-dim);
+      }
+      .mini-bar-val {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--text-muted);
+        width: 40px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .stats-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 36px;
+      }
+      .stat-block {
+        padding: 28px 24px;
+        border-right: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .stat-block:last-child {
+        border-right: none;
+      }
+      .stat-big {
+        font-family: var(--sans);
+        font-size: 56px;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.04em;
+        margin-bottom: 8px;
+      }
+      .stat-big.red {
+        color: var(--red);
+      }
+      .stat-big.green {
+        color: var(--green);
+      }
+      .stat-big.amber {
+        color: var(--amber);
+      }
+      .stat-big.white {
+        color: var(--white);
+      }
+      .stat-desc {
+        font-size: 16px;
+        color: var(--text2);
+        line-height: 1.5;
+      }
+      .stat-foot {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        margin-top: 8px;
+      }
+
+      .status-good {
+        color: var(--green);
+      }
+      .status-warn {
+        color: var(--amber);
+      }
+      .status-muted {
+        color: var(--text-dim);
+      }
+      .status-accent {
+        color: var(--blue);
+      }
+      .detector-status {
+        font-weight: 600;
+      }
+
+      .hotspot-list {
+        margin-top: 0;
+      }
+      .hotspot-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .hotspot-row:last-child {
+        border-bottom: none;
+      }
+      .hotspot-rank {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-dim);
+        width: 28px;
+        text-align: right;
+        flex-shrink: 0;
+        font-family: var(--mono);
+      }
+      .hotspot-file {
+        font-family: var(--mono);
+        font-size: 15px;
+        color: var(--text);
+        width: 180px;
+        flex-shrink: 0;
+      }
+      .hotspot-bar-wrap {
+        flex: 1;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .hotspot-bar {
+        height: 100%;
+        border-radius: 3px;
+        width: 0;
+        transition: width 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .bar-red {
+        background: var(--red);
+      }
+      .bar-amber {
+        background: var(--amber);
+      }
+      .hotspot-count {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--text2);
+        width: 140px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .hotspot-badge {
+        width: 110px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .hotspot-ranked-list {
+        list-style: decimal-leading-zero;
+        margin: 0;
+        padding-left: 28px;
+      }
+      .hotspot-ranked-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .hotspot-ranked-item:last-child {
+        border-bottom: none;
+      }
+      .hotspot-ranked-path {
+        font-family: var(--mono);
+        font-size: 15px;
+        color: var(--text);
+      }
+      .hotspot-ranked-metric {
+        color: var(--text2);
+        font-size: 15px;
+        line-height: 1.6;
+        text-align: right;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .family-pill-row {
+        margin: 0 0 16px;
+      }
+
+      .finding-pill-row {
+        margin: 0 0 16px;
+      }
+
+      .family-prevention-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: flex-start;
+        gap: 8px;
+        margin: 0 0 16px;
+        color: var(--text2);
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .family-prevention-row strong {
+        color: var(--text);
+      }
+
+      .family-prevention-sep {
+        color: var(--text-dim);
+      }
+
+      .appendix-note {
+        margin: 0 0 16px;
+        color: var(--text-dim);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .section-subsection + .section-subsection {
+        margin-top: 36px;
+      }
+      .section-subsection h3 {
+        margin: 0 0 24px;
+        font: 700 22px/1.2 var(--sans);
+        color: var(--text);
+      }
+      .merged-card-title {
+        margin: 0 0 16px;
+        font: 700 20px/1.15 var(--sans);
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      .finding-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .finding-card {
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .finding-card:hover {
+        border-color: var(--border-hi);
+        transform: translateY(-2px);
+      }
+
+      .finding-card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .finding-issue-id {
+        color: var(--danger);
+        font: 600 13px/1.2 var(--mono);
+      }
+
+      .finding-card h3 {
+        margin: 6px 0 0;
+        font: 700 20px/1.15 var(--sans);
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+
+      .severity-badge {
+        display: inline-flex;
+        padding: 5px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        font: 600 11px/1.2 var(--mono);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+      }
+      .severity-critical,
+      .severity-high {
+        color: var(--danger);
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.08);
+      }
+      .severity-medium {
+        color: var(--warn);
+        border-color: rgba(245, 158, 11, 0.3);
+        background: rgba(245, 158, 11, 0.08);
+      }
+      .severity-low {
+        color: var(--good);
+        border-color: rgba(34, 197, 94, 0.3);
+        background: rgba(34, 197, 94, 0.08);
+      }
+      .severity-unknown {
+        color: var(--text-dim);
+      }
+
+      .finding-summary {
+        color: var(--text2);
+        font-size: 15px;
+        line-height: 1.65;
+        margin: 0;
+      }
+
+      .finding-callout {
+        margin-top: 16px;
+        padding: 18px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      .finding-callout strong {
+        font: 600 13px/1.2 var(--mono);
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .finding-callout p,
+      .artifact-list p {
+        margin: 8px 0 0;
+        color: var(--text2);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+
+      .evidence-list {
+        margin-top: 16px;
+      }
+
+      /* ── Drawers / disclosure ── */
+      .drawer {
+        margin-top: 16px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .drawer summary {
+        cursor: pointer;
+        padding: 14px 20px;
+        background: rgba(255, 255, 255, 0.03);
+        font: 500 13px/1.2 var(--mono);
+        color: var(--text-muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 0.15s;
+      }
+      .drawer summary:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .drawer summary::after {
+        content: "+";
+        font-size: 16px;
+        font-weight: 300;
+      }
+      .drawer[open] summary::after {
+        content: "−";
+      }
+      .drawer[open] summary {
+        border-bottom: 1px solid var(--border);
+      }
+      .drawer > :not(summary) {
+        padding: 18px 20px;
+      }
+
+      /* ── Appendix ── */
+      .appendix-group {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .appendix-group summary {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 24px;
+        background: var(--surface);
+        font: 500 12px/1.2 var(--mono);
+        color: var(--text-muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        list-style: none;
+        transition: background 0.15s;
+      }
+      .appendix-group summary:hover {
+        background: var(--surface2);
+      }
+      .appendix-group summary span {
+        color: var(--text-dim);
+        font-size: 13px;
+        font-weight: 400;
+      }
+      .appendix-group summary::after {
+        content: "+";
+        font-size: 16px;
+        font-weight: 300;
+      }
+      .appendix-group[open] summary::after {
+        content: "−";
+      }
+      .appendix-group[open] summary {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .artifact-list li + li {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      .artifact-list a {
+        font: 500 13px/1.2 var(--mono);
+        color: var(--accent);
+      }
+
+      .method-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .method-card {
+        position: relative;
+        overflow: hidden;
+        padding: 36px 28px;
+      }
+      .method-card::before {
+        content: attr(data-num);
+        position: absolute;
+        top: -16px;
+        right: 16px;
+        font-family: var(--sans);
+        font-size: 96px;
+        font-weight: 900;
+        color: rgba(255, 255, 255, 0.03);
+        line-height: 1;
+        pointer-events: none;
+      }
+      .method-card h3 {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--white);
+        margin: 0 0 10px;
+      }
+      .method-card p {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.7;
+        margin: 0;
+      }
+
+      @media (max-width: 900px) {
+        .summary-grid,
+        .dual-columns,
+        .method-grid,
+        .appendix-grid,
+        .finding-grid {
+          grid-template-columns: 1fr;
+        }
+        .breakout-grid {
+          grid-template-columns: 1fr;
+        }
+        .stats-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .histogram {
+          height: 200px;
+        }
+        .hist-bar {
+          width: 22px;
+        }
+        .histogram-wrap {
+          padding: 28px 20px;
+        }
+        .histogram-top {
+          flex-direction: column;
+          gap: 12px;
+        }
+        .widget-controls,
+        .widget-pill-row {
+          align-items: flex-start;
+          justify-content: flex-start;
+        }
+        .hotspot-file {
+          width: 120px;
+        }
+        .hotspot-row {
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .hotspot-count,
+        .hotspot-badge {
+          width: auto;
+        }
+        .hotspot-ranked-item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .hotspot-ranked-metric {
+          text-align: left;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .stats-strip {
+          grid-template-columns: 1fr;
+        }
+        .histogram-cats {
+          gap: 4px;
+        }
+        .hist-cat {
+          font-size: 10px;
+        }
+        .mini-bar-name {
+          width: 96px;
+          font-size: 12px;
+        }
+      }
+
+      @media print {
+        :root {
+          --bg: #fff;
+          --bg-soft: #fff;
+          --panel: #fff;
+          --panel-strong: #f8f8f8;
+          --border: rgba(0, 0, 0, 0.12);
+          --border-hi: rgba(0, 0, 0, 0.2);
+          --text: #1a1a1a;
+          --text-soft: #333;
+          --text-dim: #666;
+          --accent: #8a5a08;
+          --accent-warm: #c0392b;
+          --good: #18784a;
+          --warn: #8a5a08;
+          --danger: #c0392b;
+          --shadow: none;
+        }
+
+        body {
+          background: #fff !important;
+          color: #1a1a1a !important;
+          font-size: 11pt;
+          line-height: 1.55;
+        }
+        body::before {
+          display: none !important;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+
+        .nav-bar,
+        .accent-bar {
+          position: static;
+        }
+        .accent-glow {
+          display: none !important;
+        }
+        .accent-line {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        .report-section {
+          opacity: 1 !important;
+          transform: none !important;
+          padding: 36pt 0;
+          break-inside: avoid-page;
+        }
+
+        .hero {
+          padding: 36pt 0;
+        }
+        .hero-shell {
+          grid-template-columns: 1fr 220pt;
+          gap: 24pt;
+        }
+        .hero-copy h1 {
+          font-size: 28pt;
+          color: #000 !important;
+        }
+
+        .section-header h2 {
+          font-size: 18pt;
+        }
+
+        /* Cards white bg */
+        .summary-card,
+        .comparison-card,
+        .panel,
+        .method-card,
+        .stat-card,
+        .finding-card,
+        .appendix-group,
+        .treemap-card,
+        .hero-aside {
+          background: #fff !important;
+          border-color: #ddd !important;
+          box-shadow: none !important;
+          break-inside: avoid;
+        }
+
+        /* Stats */
+        .stat-card {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+        .stat-good {
+          border-bottom-color: var(--good) !important;
+        }
+        .stat-warn {
+          border-bottom-color: var(--warn) !important;
+        }
+        .stat-danger {
+          border-bottom-color: var(--danger) !important;
+        }
+
+        /* Bars */
+        .comparison-track,
+        .hotspot-bar {
+          background: #eee !important;
+        }
+        .comparison-bar-project,
+        .hotspot-bar span {
+          background: #8a5a08 !important;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+        .comparison-bar-peer {
+          background: #aaa !important;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        /* Treemap nodes */
+        .risk-high,
+        .risk-medium,
+        .risk-low,
+        .treemap-node {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        /* Findings */
+        .finding-grid,
+        .summary-grid,
+        .dual-columns,
+        .appendix-grid,
+        .method-grid {
+          grid-template-columns: 1fr;
+        }
+        .finding-card {
+          break-inside: avoid;
+        }
+
+        /* Drawers open */
+        .drawer {
+          display: block;
+          border: 1pt solid #ddd;
+        }
+        .drawer > summary {
+          display: block;
+          background: #f5f5f5 !important;
+          color: #444 !important;
+        }
+        .drawer > summary::after {
+          content: "" !important;
+        }
+        details > *:not(summary) {
+          display: block !important;
+        }
+
+        /* Code blocks */
+        pre {
+          background: #fff !important;
+          border: 1pt solid #ccc !important;
+          color: #333 !important;
+          font-size: 8pt;
+        }
+
+        /* Pills */
+        .pill {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        /* Severity badges */
+        .severity-badge {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        /* Links */
+        a[href^="mailto"]::after {
+          content: " (" attr(href) ")";
+          font-size: 9pt;
+          color: #888;
+        }
+      }
+
+      /* ── Compact key-value callout overrides ── */
+      .finding-card .finding-callout {
+        margin-top: 10px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 12px;
+        align-items: baseline;
+      }
+      .finding-card .finding-callout strong {
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .finding-card .finding-callout p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .finding-card h4.merged-card-title {
+        font-size: 17px;
+      }
+      .finding-card .finding-summary {
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .finding-card .finding-card-header {
+        margin-bottom: 10px;
+      }
+      .finding-card .evidence-list li {
+        font-size: 14px;
+        padding: 6px 0;
+      }
+      .finding-grid {
+        gap: 16px;
+      }
+
+      /* ── Summary table ── */
+      .hero-summary-table th,
+      .hero-summary-table td {
+        padding: 10px 14px;
+        font-size: 12px;
+      }
+      .hero h1 {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav-bar">
+      <div class="nav-brand">
+        <span class="brand-text">VARTIA.AI</span>
+      </div>
+      <div class="nav-pills">
+        <span class="pill pill-muted">LibTIFF · f324415f50cb</span>
+        <span class="pill pill-muted">2026-03-12</span>
+      </div>
+    </nav>
+    <div class="accent-bar">
+      <div class="accent-line"></div>
+      <div class="accent-glow"></div>
+    </div>
+    <main>
+      <section id="hero" class="hero">
+        <div class="hero-inner">
+          <div class="hero-content">
+            <h1>
+              <span
+                >Historical Security Analysis of LibTIFF Vulnerabilities</span
+              >
+              <span class="thin"
+                >Three recurring patterns explain most of LibTIFF's severe
+                historical vulnerabilities.<br>Purpose-built static analysis
+                queries can enforce continuous coverage for all three
+                families.</span
+              >
+            </h1>
+
+          </div>
+        </div>
+      </section>
+      <div class="wrap">
+        <section id="category-comparison" class="report-section">
+          <div class="section-header">
+            <div class="section-num">
+              01 · How LibTIFF's severe bugs differ from peer image libraries
+            </div>
+            <h2>How LibTIFF's severe bugs differ from peer image libraries</h2>
+          </div>
+          <div class="histogram-wrap">
+            <div class="histogram-top">
+              <div>
+                <div class="histogram-title">Distribution by Category</div>
+                <div class="histogram-subtitle">
+                  Percentage of total in-scope findings attributed to each
+                  weakness class
+                </div>
+              </div>
+              <div id="comparison-controls" class="widget-controls"></div>
+            </div>
+            <div id="comparison-chart"></div>
+            <div id="comparison-caption" class="widget-caption"></div>
+          </div>
+          <div class="callout">
+            <div class="callout-bar"></div>
+            <div class="callout-body">
+              <div class="callout-label">Opening comparison</div>
+              <div class="callout-text">
+                LibTIFF diverges from peers by concentrating more heavily in a
+                small set of recurring patterns, while peer image libraries show
+                a broader spread of severe weakness classes. That concentration
+                suggests a more targeted prevention opportunity than a diffuse
+                bug profile would, and the rest of the report shows where those
+                patterns recur in code and how much prevention evidence exists
+                for each family.
+              </div>
+            </div>
+          </div>
+          <div class="cohort-note">
+            <strong>Peer cohort:</strong> struktur:libheif, libraw:libraw,
+            tinyexr_project:tinyexr, libexif_project:exif, bandisoft:honeyview,
+            +7 more
+          </div>
+          <script id="comparison-widget-data" type="application/json">
+            {
+              "category_priority": {
+                "high_critical": [
+                  "Out-of-Bounds Write - Bounds -> Management",
+                  "Integer Overflow - Bounds -> Access",
+                  "Out-of-Bounds Write - Bounds -> Access",
+                  "Out-of-Bounds Access (Generic) - Bounds -> Management",
+                  "Undefined Behavior - Language Semantics",
+                  "Integer Overflow - Bounds -> Management",
+                  "Out-of-Bounds Read - Bounds -> Access",
+                  "Null Dereference - Logic -> I/O"
+                ],
+                "all": [
+                  "Out-of-Bounds Write - Bounds -> Management",
+                  "Integer Overflow - Bounds -> Access",
+                  "Out-of-Bounds Write - Bounds -> Access",
+                  "Out-of-Bounds Access (Generic) - Bounds -> Management",
+                  "Undefined Behavior - Language Semantics",
+                  "Integer Overflow - Bounds -> Management",
+                  "Out-of-Bounds Read - Bounds -> Access",
+                  "Null Dereference - Logic -> I/O"
+                ]
+              },
+              "default_preset": "high_critical",
+              "display_labels": {
+                "Double Free - Lifetime -> Management": "Double free",
+                "Integer Overflow - Bounds -> Access": "Bounds overflow -> memory access",
+                "Integer Overflow - Numeric -> Access": "Numeric overflow -> memory access",
+                "Integer Overflow - Numeric -> I/O": "Numeric overflow in I/O sizing",
+                "Integer Overflow - Numeric -> Management": "Numeric overflow in management path",
+                "Null Dereference - Concurrency -> Access": "Null dereference in concurrency path",
+                "Null Dereference - Logic -> I/O": "Null dereference in I/O logic",
+                "Null Dereference - Resource -> Access": "Null dereference in resource access",
+                "Out-of-Bounds Access (Generic) - Bounds -> Management": "Bounds access in management path",
+                "Out-of-Bounds Read - Bounds -> Access": "Out-of-bounds read",
+                "Out-of-Bounds Write - Bounds -> Access": "Direct out-of-bounds write",
+                "Out-of-Bounds Write - Bounds -> Array Index": "Out-of-bounds write from index error",
+                "Out-of-Bounds Write - Bounds -> Management": "Bounds write in management path",
+                "Resource Exhaustion - Resource -> Management": "Resource exhaustion in management path",
+                "Type Truncation - Numeric -> Management": "Type truncation in management path",
+                "Undefined Behavior - Language Semantics": "Undefined behavior"
+              },
+              "fallback_views": {
+                "all": [
+                  {
+                    "label": "Integer Overflow - Bounds -> Access",
+                    "peer_count": 3,
+                    "peer_pct": 3.12,
+                    "project_count": 2,
+                    "project_pct": 5.13
+                  },
+                  {
+                    "label": "Integer Overflow - Bounds -> Management",
+                    "peer_count": 0,
+                    "peer_pct": 0.0,
+                    "project_count": 4,
+                    "project_pct": 10.26
+                  },
+                  {
+                    "label": "Integer Overflow - Numeric -> Access",
+                    "peer_count": 9,
+                    "peer_pct": 9.38,
+                    "project_count": 0,
+                    "project_pct": 0.0
+                  },
+                  {
+                    "label": "Integer Overflow - Numeric -> I/O",
+                    "peer_count": 2,
+                    "peer_pct": 2.08,
+                    "project_count": 0,
+                    "project_pct": 0.0
+                  },
+                  {
+                    "label": "Null Dereference - Concurrency -> Access",
+                    "peer_count": 3,
+                    "peer_pct": 3.12,
+                    "project_count": 0,
+                    "project_pct": 0.0
+                  },
+                  {
+                    "label": "Null Dereference - Logic -> I/O",
+                    "peer_count": 0,
+                    "peer_pct": 0.0,
+                    "project_count": 1,
+                    "project_pct": 2.56
+                  },
+                  {
+                    "label": "Null Dereference - Resource -> Access",
+                    "peer_count": 11,
+                    "peer_pct": 11.46,
+                    "project_count": 0,
+                    "project_pct": 0.0
+                  },
+                  {
+                    "label": "Out-of-Bounds Access (Generic) - Bounds -> Management",
+                    "peer_count": 0,
+                    "peer_pct": 0.0,
+                    "project_count": 16,
+                    "project_pct": 41.03
+                  },
+                  {
+                    "label": "Out-of-Bounds Read - Bounds -> Access",
+                    "peer_count": 27,
+                    "peer_pct": 28.12,
+                    "project_count": 2,
+                    "project_pct": 5.13
+                  },
+                  {
+                    "label": "Out-of-Bounds Write - Bounds -> Access",
+                    "peer_count": 31,
+                    "peer_pct": 32.29,
+                    "project_count": 1,
+                    "project_pct": 2.56
+                  },
+                  {
+                    "label": "Out-of-Bounds Write - Bounds -> Array Index",
+                    "peer_count": 0,
+                    "peer_pct": 0.0,
+                    "project_count": 1,
+                    "project_pct": 2.56
+                  },
+                  {
+                    "label": "Out-of-Bounds Write - Bounds -> Management",
+                    "peer_count": 0,
+                    "peer_pct": 0.0,
+                    "project_count": 4,
+                    "project_pct": 10.26
+                  },
+                  {
+                    "label": "Resource Exhaustion - Resource -> Management",
+                    "peer_count": 5,
+                    "peer_pct": 5.21,
+                    "project_count": 0,
+                    "project_pct": 0.0
+                  },
+                  {
+                    "label": "Undefined Behavior - Language Semantics",
+                    "peer_count": 0,
+                    "peer_pct": 0.0,
+                    "project_count": 8,
+                    "project_pct": 20.51
+                  }
+                ]
+              },
+              "peer_name": "Peer image-processing libraries (12 repositories)",
+              "project_name": "LibTIFF",
+              "raw_rows": [
+                {
+                  "label": "Double Free - Lifetime -> Management",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Integer Overflow - Bounds -> Access",
+                  "peer_count": 1,
+                  "project_count": 2,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Integer Overflow - Bounds -> Access",
+                  "peer_count": 2,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Integer Overflow - Bounds -> Management",
+                  "peer_count": 0,
+                  "project_count": 4,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Integer Overflow - Numeric -> Access",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Integer Overflow - Numeric -> Access",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "LOW"
+                },
+                {
+                  "label": "Integer Overflow - Numeric -> Access",
+                  "peer_count": 7,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Integer Overflow - Numeric -> I/O",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "CRITICAL"
+                },
+                {
+                  "label": "Integer Overflow - Numeric -> I/O",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Integer Overflow - Numeric -> Management",
+                  "peer_count": 0,
+                  "project_count": 0,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Null Dereference - Concurrency -> Access",
+                  "peer_count": 3,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Null Dereference - Logic -> I/O",
+                  "peer_count": 0,
+                  "project_count": 1,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Null Dereference - Resource -> Access",
+                  "peer_count": 3,
+                  "project_count": 0,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Null Dereference - Resource -> Access",
+                  "peer_count": 8,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Out-of-Bounds Access (Generic) - Bounds -> Access",
+                  "peer_count": 2,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Out-of-Bounds Access (Generic) - Bounds -> Management",
+                  "peer_count": 0,
+                  "project_count": 16,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Out-of-Bounds Read - Bounds -> Access",
+                  "peer_count": 3,
+                  "project_count": 0,
+                  "severity": "CRITICAL"
+                },
+                {
+                  "label": "Out-of-Bounds Read - Bounds -> Access",
+                  "peer_count": 6,
+                  "project_count": 0,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Out-of-Bounds Read - Bounds -> Access",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "LOW"
+                },
+                {
+                  "label": "Out-of-Bounds Read - Bounds -> Access",
+                  "peer_count": 17,
+                  "project_count": 2,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Access",
+                  "peer_count": 2,
+                  "project_count": 0,
+                  "severity": "CRITICAL"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Access",
+                  "peer_count": 16,
+                  "project_count": 1,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Access",
+                  "peer_count": 13,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Array Index",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Array Index",
+                  "peer_count": 0,
+                  "project_count": 1,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Management",
+                  "peer_count": 0,
+                  "project_count": 2,
+                  "severity": "HIGH"
+                },
+                {
+                  "label": "Out-of-Bounds Write - Bounds -> Management",
+                  "peer_count": 0,
+                  "project_count": 2,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Resource Exhaustion - Resource -> Management",
+                  "peer_count": 5,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Type Truncation - Numeric -> Management",
+                  "peer_count": 1,
+                  "project_count": 0,
+                  "severity": "MEDIUM"
+                },
+                {
+                  "label": "Undefined Behavior - Language Semantics",
+                  "peer_count": 0,
+                  "project_count": 8,
+                  "severity": "MEDIUM"
+                }
+              ],
+              "top_limit": 8
+            }
+          </script>
+        </section>
+        <section id="executive-summary" class="report-section">
+          <div class="section-header">
+            <div class="section-num">02 · Executive Summary</div>
+            <h2>
+              Severe bugs in LibTIFF recur in a small set of patterns and files.
+            </h2>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-card summary-card-emphasis">
+              <h3>Key Findings</h3>
+              <p>
+                Across LibTIFF's historical vulnerability set, severe security
+                bugs repeatedly fall into three families:
+              </p>
+              <ul class="bullet-list">
+                <li>Raster-address arithmetic</li>
+                <li>Geometry and layout handling</li>
+                <li>Directory metadata state</li>
+              </ul>
+              <p>
+                These patterns account for the majority of severe
+                findings in the library.
+              </p>
+              <p>
+                The largest hotspot appears in tools/tiffcrop.c, which contains
+                more than half of the in-scope findings. Additional clusters
+                appear in tif_dirread.c and tif_getimage.c.
+              </p>
+            </div>
+            <div class="summary-card">
+              <h3>Proof points</h3>
+              <ul class="clean-list">
+                <li>23 of 39 in-scope findings map to tools/tiffcrop.c.</li>
+                <li>
+                  libtiff/tif_getimage.c contributes two paired arithmetic
+                  findings, both with automated detectors.
+                </li>
+                <li>
+                  libtiff/tif_dirread.c contributes four directory-state
+                  findings, all verified by detectors tested against historical
+                  code.
+                </li>
+                <li>
+                  CVE-2022-0891 has a proof-of-concept crash reproduction
+                  confirming the tiffcrop vulnerability pattern.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout summary-callout">
+            <div class="callout-bar"></div>
+            <div class="callout-body">
+              <div class="callout-label">Prevention takeaway</div>
+              <div class="callout-text">
+                The strongest prevention opportunities are:
+                <ul class="bullet-list">
+                  <li>Overflow checks in raster-address calculations</li>
+                  <li>Geometry and layout validation in tiffcrop</li>
+                  <li>Input validation for directory fields during parsing</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="hotspot-interpretation" class="report-section">
+          <div class="section-header">
+            <div class="section-num">03 · Hotspot Concentration</div>
+            <h2>Hotspot Concentration</h2>
+          </div>
+          <div class="callout">
+            <div class="callout-bar"></div>
+            <div class="callout-body">
+              <div class="callout-label">Where severe bugs concentrate</div>
+              <div class="callout-text">
+                `tools/tiffcrop.c` carries 23 in-scope findings and acts as a
+                recurring geometry, layout, and state-management fault surface.
+                `libtiff/tif_dirread.c` contributes a smaller but repeated
+                metadata-state cluster with 4 in-scope findings.
+              </div>
+            </div>
+          </div>
+          <div class="hotspot-list">
+            <div class="hotspot-row">
+              <div class="hotspot-rank">01</div>
+              <div class="hotspot-file">tools/tiffcrop.c</div>
+              <div class="hotspot-bar-wrap">
+                <div class="hotspot-bar bar-red" style="width: 100%"></div>
+              </div>
+              <div class="hotspot-count">23 findings (2 High, 21 Medium)</div>
+            </div>
+            <div class="hotspot-row">
+              <div class="hotspot-rank">02</div>
+              <div class="hotspot-file">libtiff/tif_dirread.c</div>
+              <div class="hotspot-bar-wrap">
+                <div class="hotspot-bar bar-amber" style="width: 17.39%"></div>
+              </div>
+              <div class="hotspot-count">4 findings (4 Medium)</div>
+            </div>
+            <div class="hotspot-row">
+              <div class="hotspot-rank">03</div>
+              <div class="hotspot-file">libtiff/tif_dir.c</div>
+              <div class="hotspot-bar-wrap">
+                <div class="hotspot-bar bar-amber" style="width: 13.04%"></div>
+              </div>
+              <div class="hotspot-count">3 findings (3 Medium)</div>
+            </div>
+            <div class="hotspot-row">
+              <div class="hotspot-rank">04</div>
+              <div class="hotspot-file">libtiff/tif_getimage.c</div>
+              <div class="hotspot-bar-wrap">
+                <div class="hotspot-bar bar-amber" style="width: 8.7%"></div>
+              </div>
+              <div class="hotspot-count">2 findings (2 High)</div>
+            </div>
+            <div class="hotspot-row">
+              <div class="hotspot-rank">05</div>
+              <div class="hotspot-file">libtiff/tif_lzw.c</div>
+              <div class="hotspot-bar-wrap">
+                <div class="hotspot-bar bar-amber" style="width: 8.7%"></div>
+              </div>
+              <div class="hotspot-count">2 findings (2 Medium)</div>
+            </div>
+            <div class="hotspot-row">
+              <div class="hotspot-rank">06</div>
+              <div class="hotspot-file">tools/tiffcp.c</div>
+              <div class="hotspot-bar-wrap">
+                <div class="hotspot-bar bar-amber" style="width: 8.7%"></div>
+              </div>
+              <div class="hotspot-count">2 findings (2 Medium)</div>
+            </div>
+          </div>
+        </section>
+        <section
+          id="vulnerability-patterns-and-detector-strategies"
+          class="report-section"
+        >
+          <div class="section-header">
+            <div class="section-num">
+              04 · Vulnerability Patterns and Detector Strategies
+            </div>
+            <h2>Vulnerability Patterns and Detector Strategies</h2>
+          </div>
+
+          <div class="section-subsection">
+            <h3 id="detector-validation-matrix">Custom Detector Coverage</h3>
+            <table class="hero-summary-table">
+              <thead>
+                <tr>
+                  <th>Bug family</th>
+                  <th><a href="/static/libtiff/family_raster_address_arithmetic.html">Raster-address arithmetic</a></th>
+                  <th><a href="/static/libtiff/family_geometry_layout.html">Geometry / layout handling</a></th>
+                  <th><a href="/static/libtiff/family_directory_metadata.html">Directory metadata state</a></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="row-label">Historical bugs<br>/ bugs found</td>
+                  <td class="result good">12 / 12</td>
+                  <td class="result good">8 / 8</td>
+                  <td class="result good">5 / 5</td>
+                </tr>
+                <tr>
+                  <td class="row-label">False positives</td>
+                  <td class="result good">0</td>
+                  <td class="result good">0</td>
+                  <td class="result good">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+        <section id="appendix" class="report-section">
+          <div class="section-header">
+            <div class="section-num">Appendix</div>
+            <h2>Appendix</h2>
+          </div>
+          <div class="appendix-grid">
+            <details class="drawer appendix-group">
+              <summary>
+                Peer comparison cohort <span>12 repositories</span>
+              </summary>
+              <p class="appendix-note">
+                Full peer list used for the comparison section.
+              </p>
+              <ul class="clean-list artifact-list">
+                <li>struktur:libheif</li>
+                <li>libraw:libraw</li>
+                <li>tinyexr_project:tinyexr</li>
+                <li>libexif_project:exif</li>
+                <li>bandisoft:honeyview</li>
+                <li>aomedia:libavif</li>
+                <li>jpeg:libjpeg</li>
+                <li>libjpeg-turbo:libjpeg-turbo</li>
+                <li>matthiaswandel:jhead</li>
+                <li>openexr:openexr</li>
+                <li>libgd:libgd</li>
+                <li>exiv2:exiv2</li>
+              </ul>
+            </details>
+            <details class="drawer appendix-group">
+              <summary>Issue Packet Ref <span>121 artifacts</span></summary>
+              <ul class="clean-list artifact-list">
+                <li>
+                  <a href="issues/CVE-2004-0803/logs/build_fix.log"
+                    >CVE-2004-0803:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0803/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0803/logs/build_pre.log"
+                    >CVE-2004-0803:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0803/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0804/logs/build_fix.log"
+                    >CVE-2004-0804:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0804/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0804/logs/build_pre.log"
+                    >CVE-2004-0804:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0804/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0886/logs/build_fix.log"
+                    >CVE-2004-0886:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0886/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0886/logs/build_pre.log"
+                    >CVE-2004-0886:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0886/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0929/logs/build_fix.log"
+                    >CVE-2004-0929:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0929/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2004-0929/logs/build_pre.log"
+                    >CVE-2004-0929:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2004-0929/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-18768/logs/build_fix.log"
+                    >CVE-2020-18768:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2020-18768/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-18768/logs/build_pre.log"
+                    >CVE-2020-18768:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2020-18768/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-19131/logs/build_fix.log"
+                    >CVE-2020-19131:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2020-19131/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-19131/logs/build_pre.log"
+                    >CVE-2020-19131:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2020-19131/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-35523/logs/build_fix.log"
+                    >CVE-2020-35523:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2020-35523/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-35523/logs/build_pre.log"
+                    >CVE-2020-35523:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2020-35523/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2020-35523/detectors/libtiff-cve-2020-35523-tif-getimage-overflow/query.ql"
+                    >CVE-2020-35523:query.effective_query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2020-35523/detectors/libtiff-cve-2020-35523-tif-getimage-overflow/query.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2020-35523/detectors/libtiff-cve-2020-35523-tif-getimage-overflow/query.ql"
+                    >CVE-2020-35523:query.query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2020-35523/detectors/libtiff-cve-2020-35523-tif-getimage-overflow/query.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-35524/logs/build_fix.log"
+                    >CVE-2020-35524:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2020-35524/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2020-35524/logs/build_pre.log"
+                    >CVE-2020-35524:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2020-35524/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/fix.sarif"
+                    >CVE-2022-0561:backtest.fix_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/fix.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/head.sarif"
+                    >CVE-2022-0561:backtest.head_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/head.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/pre.sarif"
+                    >CVE-2022-0561:backtest.pre_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/pre.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0561:backtest.validation_query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0561/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0561/logs/build_fix.log"
+                    >CVE-2022-0561:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0561/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0561/logs/build_pre.log"
+                    >CVE-2022-0561:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0561/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0561:query.effective_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0561:query.query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0561:query.validation_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/fix.sarif"
+                    >CVE-2022-0562:backtest.fix_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/fix.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/head.sarif"
+                    >CVE-2022-0562:backtest.head_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/head.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/pre.sarif"
+                    >CVE-2022-0562:backtest.pre_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/pre.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0562:backtest.validation_query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0562/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0562/logs/build_fix.log"
+                    >CVE-2022-0562:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0562/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0562/logs/build_pre.log"
+                    >CVE-2022-0562:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0562/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0562:query.effective_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0562:query.query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0562:query.validation_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0891/logs/build_fix.log"
+                    >CVE-2022-0891:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0891/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0891/logs/build_pre.log"
+                    >CVE-2022-0891:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0891/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0891/artifacts/witness/poc.tif"
+                    >CVE-2022-0891:witness.artifact_refs[0]</a
+                  >
+                  <p>issues/CVE-2022-0891/artifacts/witness/poc.tif</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0891/logs/witness_fix.log"
+                    >CVE-2022-0891:witness.fix_log_ref</a
+                  >
+                  <p>issues/CVE-2022-0891/logs/witness_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0891/logs/witness_pre_asan.log"
+                    >CVE-2022-0891:witness.pre_log_ref</a
+                  >
+                  <p>issues/CVE-2022-0891/logs/witness_pre_asan.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0907/logs/build_fix.log"
+                    >CVE-2022-0907:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0907/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0907/logs/build_pre.log"
+                    >CVE-2022-0907:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0907/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/fix.sarif"
+                    >CVE-2022-0908:backtest.fix_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/fix.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/head.sarif"
+                    >CVE-2022-0908:backtest.head_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/head.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/pre.sarif"
+                    >CVE-2022-0908:backtest.pre_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/pre.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0908:backtest.validation_query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-0908/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0908/logs/build_fix.log"
+                    >CVE-2022-0908:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0908/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0908/logs/build_pre.log"
+                    >CVE-2022-0908:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0908/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0908:query.effective_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0908:query.query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-0908:query.validation_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0909/logs/build_fix.log"
+                    >CVE-2022-0909:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0909/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0909/logs/build_pre.log"
+                    >CVE-2022-0909:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0909/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0924/logs/build_fix.log"
+                    >CVE-2022-0924:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0924/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-0924/logs/build_pre.log"
+                    >CVE-2022-0924:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-0924/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1056/logs/build_fix.log"
+                    >CVE-2022-1056:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1056/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1056/logs/build_pre.log"
+                    >CVE-2022-1056:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1056/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/fix.sarif"
+                    >CVE-2022-1354:backtest.fix_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/fix.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/head.sarif"
+                    >CVE-2022-1354:backtest.head_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/head.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/pre.sarif"
+                    >CVE-2022-1354:backtest.pre_results_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/pre.sarif
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-1354:backtest.validation_query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-1354/backtests/libtiff-tif-dirread-cves-2022/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1354/logs/build_fix.log"
+                    >CVE-2022-1354:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1354/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1354/logs/build_pre.log"
+                    >CVE-2022-1354:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1354/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-1354:query.effective_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-1354:query.query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql"
+                    >CVE-2022-1354:query.validation_query_ref</a
+                  >
+                  <p>
+                    detectors/libtiff-tif-dirread-cves-2022/queries/LibtiffDirreadCves2022.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1355/logs/build_fix.log"
+                    >CVE-2022-1355:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1355/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1355/logs/build_pre.log"
+                    >CVE-2022-1355:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1355/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1622/logs/build_fix.log"
+                    >CVE-2022-1622:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1622/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1622/logs/build_pre.log"
+                    >CVE-2022-1622:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1622/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1623/logs/build_fix.log"
+                    >CVE-2022-1623:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1623/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-1623/logs/build_pre.log"
+                    >CVE-2022-1623:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-1623/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2056/logs/build_fix.log"
+                    >CVE-2022-2056:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2056/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2056/logs/build_pre.log"
+                    >CVE-2022-2056:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2056/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2057/logs/build_fix.log"
+                    >CVE-2022-2057:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2057/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2057/logs/build_pre.log"
+                    >CVE-2022-2057:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2057/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2058/logs/build_fix.log"
+                    >CVE-2022-2058:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2058/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2058/logs/build_pre.log"
+                    >CVE-2022-2058:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2058/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2867/logs/build_fix.log"
+                    >CVE-2022-2867:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2867/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2867/logs/build_pre.log"
+                    >CVE-2022-2867:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2867/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2868/logs/build_fix.log"
+                    >CVE-2022-2868:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2868/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2868/logs/build_pre.log"
+                    >CVE-2022-2868:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2868/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2869/logs/build_fix.log"
+                    >CVE-2022-2869:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2869/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-2869/logs/build_pre.log"
+                    >CVE-2022-2869:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-2869/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-34266/logs/build_fix.log"
+                    >CVE-2022-34266:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-34266/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-34266/logs/build_pre.log"
+                    >CVE-2022-34266:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-34266/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-34526/logs/build_fix.log"
+                    >CVE-2022-34526:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-34526/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-34526/logs/build_pre.log"
+                    >CVE-2022-34526:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-34526/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3570/logs/build_fix.log"
+                    >CVE-2022-3570:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3570/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3570/logs/build_pre.log"
+                    >CVE-2022-3570:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3570/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3597/logs/build_fix.log"
+                    >CVE-2022-3597:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3597/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3597/logs/build_pre.log"
+                    >CVE-2022-3597:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3597/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3598/logs/build_fix.log"
+                    >CVE-2022-3598:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3598/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3598/logs/build_pre.log"
+                    >CVE-2022-3598:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3598/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3599/logs/build_fix.log"
+                    >CVE-2022-3599:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3599/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3599/logs/build_pre.log"
+                    >CVE-2022-3599:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3599/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3626/logs/build_fix.log"
+                    >CVE-2022-3626:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3626/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3626/logs/build_pre.log"
+                    >CVE-2022-3626:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3626/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3627/logs/build_fix.log"
+                    >CVE-2022-3627:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3627/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3627/logs/build_pre.log"
+                    >CVE-2022-3627:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3627/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3970/logs/build_fix.log"
+                    >CVE-2022-3970:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3970/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-3970/logs/build_pre.log"
+                    >CVE-2022-3970:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-3970/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-3970/detectors/libtiff-cve-2022-3970-tiffrgbatileext-overflow/query.ql"
+                    >CVE-2022-3970:query.effective_query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-3970/detectors/libtiff-cve-2022-3970-tiffrgbatileext-overflow/query.ql
+                  </p>
+                </li>
+                <li>
+                  <a
+                    href="issues/CVE-2022-3970/detectors/libtiff-cve-2022-3970-tiffrgbatileext-overflow/query.ql"
+                    >CVE-2022-3970:query.query_ref</a
+                  >
+                  <p>
+                    issues/CVE-2022-3970/detectors/libtiff-cve-2022-3970-tiffrgbatileext-overflow/query.ql
+                  </p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-4645/logs/build_fix.log"
+                    >CVE-2022-4645:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-4645/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-4645/logs/build_pre.log"
+                    >CVE-2022-4645:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-4645/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-48281/logs/build_fix.log"
+                    >CVE-2022-48281:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2022-48281/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2022-48281/logs/build_pre.log"
+                    >CVE-2022-48281:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2022-48281/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0795/logs/build_fix.log"
+                    >CVE-2023-0795:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0795/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0795/logs/build_pre.log"
+                    >CVE-2023-0795:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0795/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0796/logs/build_fix.log"
+                    >CVE-2023-0796:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0796/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0796/logs/build_pre.log"
+                    >CVE-2023-0796:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0796/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0797/logs/build_fix.log"
+                    >CVE-2023-0797:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0797/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0797/logs/build_pre.log"
+                    >CVE-2023-0797:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0797/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0798/logs/build_fix.log"
+                    >CVE-2023-0798:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0798/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0798/logs/build_pre.log"
+                    >CVE-2023-0798:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0798/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0799/logs/build_fix.log"
+                    >CVE-2023-0799:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0799/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0799/logs/build_pre.log"
+                    >CVE-2023-0799:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0799/logs/build_pre.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0800/logs/build_fix.log"
+                    >CVE-2023-0800:build.fix.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0800/logs/build_fix.log</p>
+                </li>
+                <li>
+                  <a href="issues/CVE-2023-0800/logs/build_pre.log"
+                    >CVE-2023-0800:build.pre.log_ref</a
+                  >
+                  <p>issues/CVE-2023-0800/logs/build_pre.log</p>
+                </li>
+              </ul>
+            </details>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer wrap">
+      <div>
+        <strong>LibTIFF</strong><br />
+        internal
+      </div>
+      <div class="footer-meta">
+        <span>Prepared by vartia-report</span>
+        <span>2026-03-12</span>
+      </div>
+    </footer>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const sections = Array.from(
+          document.querySelectorAll(".report-section"),
+        );
+
+        const animateHistogram = (scope) => {
+          const groups = Array.from(scope.querySelectorAll(".hist-group"));
+          if (!groups.length) {
+            return;
+          }
+          const maxValue = Math.max(
+            1,
+            ...groups.flatMap((group) => [
+              Number(group.dataset.ind || 0),
+              Number(group.dataset.cli || 0),
+            ]),
+          );
+          window.setTimeout(() => {
+            groups.forEach((group) => {
+              const bars = group.querySelectorAll(".hist-bar");
+              if (bars.length < 2) {
+                return;
+              }
+              bars[0].style.height = `${(Number(group.dataset.ind || 0) / maxValue) * 100}%`;
+              bars[1].style.height = `${(Number(group.dataset.cli || 0) / maxValue) * 100}%`;
+            });
+          }, 180);
+        };
+
+        const animateMiniBars = (scope) => {
+          scope
+            .querySelectorAll(".mini-bar-fill[data-width]")
+            .forEach((bar) => {
+              window.setTimeout(() => {
+                bar.style.width = `${bar.dataset.width}%`;
+              }, 150);
+            });
+        };
+
+        const animateHotspots = (scope) => {
+          scope.querySelectorAll(".hotspot-bar[data-pct]").forEach((bar) => {
+            window.setTimeout(() => {
+              bar.style.width = `${bar.dataset.pct}%`;
+            }, 150);
+          });
+        };
+
+        sections.forEach((section) => {
+          animateHistogram(section);
+          animateMiniBars(section);
+          animateHotspots(section);
+        });
+      });
+
+      const SEVERITY_PRESETS = [
+        {
+          id: "high_critical",
+          label: "High + Critical",
+          severities: ["CRITICAL", "HIGH"],
+        },
+        {
+          id: "all",
+          label: "All severities",
+          severities: ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+        },
+      ];
+      const DEFAULT_PRESET = "high_critical";
+
+      let openStates = [];
+      let rerenderComparisonWidget = null;
+
+      function parseJsonScript(id) {
+        const node = document.getElementById(id);
+        if (!node) {
+          return null;
+        }
+        try {
+          return JSON.parse(node.textContent || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function getPreset(selection) {
+        return (
+          SEVERITY_PRESETS.find((preset) => preset.id === selection) ||
+          SEVERITY_PRESETS[0]
+        );
+      }
+
+      function getSeveritySelection(state) {
+        return getPreset(state.selection || DEFAULT_PRESET);
+      }
+
+      function normalizeNumber(value) {
+        const parsed = Number(value || 0);
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+
+      function formatPct(value) {
+        return `${Math.round(normalizeNumber(value))}%`;
+      }
+
+      function severityAllowed(selection, severity) {
+        return getSeveritySelection({ selection }).severities.includes(
+          String(severity || "UNKNOWN").toUpperCase(),
+        );
+      }
+
+      function renderSeverityControls(container, state, onChange) {
+        if (!container) {
+          return;
+        }
+        container.innerHTML = "";
+        const label = document.createElement("div");
+        label.className = "widget-controls-label";
+        label.textContent = "Severity slice";
+        container.appendChild(label);
+
+        const select = document.createElement("select");
+        select.className = "widget-select";
+        SEVERITY_PRESETS.forEach((preset) => {
+          const option = document.createElement("option");
+          option.value = preset.id;
+          option.textContent = preset.label;
+          option.selected = state.selection === preset.id;
+          select.appendChild(option);
+        });
+        select.addEventListener("change", () => {
+          if (state.selection === select.value) {
+            return;
+          }
+          state.selection = select.value;
+          onChange();
+        });
+        container.appendChild(select);
+      }
+
+      function aggregateComparisonRows(payload, selection) {
+        if (Array.isArray(payload.raw_rows) && payload.raw_rows.length > 0) {
+          const aggregated = new Map();
+          payload.raw_rows.forEach((row) => {
+            if (!severityAllowed(selection, row.severity)) {
+              return;
+            }
+            const current = aggregated.get(row.label) || {
+              label: row.label,
+              project_count: 0,
+              peer_count: 0,
+            };
+            current.project_count += normalizeNumber(row.project_count);
+            current.peer_count += normalizeNumber(row.peer_count);
+            aggregated.set(row.label, current);
+          });
+          const rows = Array.from(aggregated.values());
+          const projectTotal = rows.reduce(
+            (sum, row) => sum + row.project_count,
+            0,
+          );
+          const peerTotal = rows.reduce((sum, row) => sum + row.peer_count, 0);
+          return rows.map((row) => ({
+            ...row,
+            project_pct: projectTotal
+              ? (row.project_count / projectTotal) * 100
+              : 0,
+            peer_pct: peerTotal ? (row.peer_count / peerTotal) * 100 : 0,
+          }));
+        }
+
+        const fallback =
+          payload.fallback_views && payload.fallback_views[selection];
+        return Array.isArray(fallback) ? fallback : [];
+      }
+
+      function comparisonCategoryLabels(payload, selection) {
+        const priority =
+          payload.category_priority && payload.category_priority[selection];
+        if (Array.isArray(priority) && priority.length) {
+          return priority.slice(0, normalizeNumber(payload.top_limit) || 8);
+        }
+
+        const aggregatedRows = aggregateComparisonRows(payload, selection);
+        return aggregatedRows
+          .slice()
+          .sort(
+            (left, right) =>
+              normalizeNumber(right.project_count) -
+                normalizeNumber(left.project_count) ||
+              normalizeNumber(right.peer_count) -
+                normalizeNumber(left.peer_count) ||
+              normalizeNumber(right.project_pct) -
+                normalizeNumber(left.project_pct) ||
+              left.label.localeCompare(right.label),
+          )
+          .slice(0, normalizeNumber(payload.top_limit) || 8)
+          .map((row) => row.label);
+      }
+
+      function materializeComparisonRows(payload, selection) {
+        const aggregatedRows = aggregateComparisonRows(payload, selection);
+        const byLabel = new Map(aggregatedRows.map((row) => [row.label, row]));
+        return comparisonCategoryLabels(payload, selection).map(
+          (label) =>
+            byLabel.get(label) || {
+              label,
+              project_count: 0,
+              peer_count: 0,
+              project_pct: 0,
+              peer_pct: 0,
+            },
+        );
+      }
+
+      function animateHistogram(scope) {
+        const groups = Array.from(scope.querySelectorAll(".hist-group"));
+        if (!groups.length) {
+          return;
+        }
+        const maxValue = Math.max(
+          1,
+          ...groups.flatMap((group) => [
+            normalizeNumber(group.dataset.ind),
+            normalizeNumber(group.dataset.cli),
+          ]),
+        );
+        window.requestAnimationFrame(() => {
+          groups.forEach((group) => {
+            const bars = group.querySelectorAll(".hist-bar");
+            if (bars.length < 2) {
+              return;
+            }
+            bars[0].style.height = `${(normalizeNumber(group.dataset.ind) / maxValue) * 100}%`;
+            bars[1].style.height = `${(normalizeNumber(group.dataset.cli) / maxValue) * 100}%`;
+          });
+        });
+      }
+
+      function renderComparisonChart(payload, selection) {
+        const chart = document.getElementById("comparison-chart");
+        const caption = document.getElementById("comparison-caption");
+        if (!chart || !caption) {
+          return;
+        }
+
+        const rows = materializeComparisonRows(payload, selection);
+        if (!rows.length) {
+          chart.innerHTML =
+            '<div class="widget-empty">No comparison categories are available for this severity view.</div>';
+          caption.textContent =
+            "No non-empty comparison categories are available for this severity view";
+          return;
+        }
+
+        chart.innerHTML = `
+        <div class="histogram-legend comparison-legend">
+          <div class="legend-item"><div class="legend-swatch ind"></div>${payload.peer_name || "Peer cohort"}</div>
+          <div class="legend-item"><div class="legend-swatch cli"></div>${payload.project_name || "Project"}</div>
+        </div>
+        <div class="histogram">
+          ${rows
+            .map(
+              (row) => `
+                <div class="hist-group" data-ind="${normalizeNumber(row.peer_pct).toFixed(2)}" data-cli="${normalizeNumber(row.project_pct).toFixed(2)}" title="${payload.project_name || "Project"}: ${normalizeNumber(row.project_count)} finding(s), ${formatPct(row.project_pct)}; ${payload.peer_name || "Peer cohort"}: ${formatPct(row.peer_pct)}">
+                  <div class="hist-bar ind" style="height:0"><div class="hist-bar-label">${formatPct(row.peer_pct)}</div></div>
+                  <div class="hist-bar cli" style="height:0">
+                    <div class="hist-bar-label">${formatPct(row.project_pct)}</div>
+                    <div class="hist-bar-count">${normalizeNumber(row.project_count)}</div>
+                  </div>
+                </div>
+              `,
+            )
+            .join("")}
+        </div>
+        <div class="histogram-cats">
+          ${rows
+            .map(
+              (row) =>
+                `<div class="hist-cat" title="${row.label}">${(payload.display_labels && payload.display_labels[row.label]) || row.label}</div>`,
+            )
+            .join("")}
+        </div>
+      `;
+
+        const projectName = payload.project_name || "project";
+        if (selection === "all") {
+          caption.textContent = `Top categories prioritized by ${projectName} high severity first, then ${projectName} all-severity coverage, then peer coverage`;
+        } else {
+          const preset = getPreset(selection);
+          caption.textContent = `Top categories prioritized by ${projectName} high severity first, then peer high-severity coverage (${preset.label})`;
+        }
+        animateHistogram(chart);
+      }
+
+      function initComparisonWidget() {
+        const payload = parseJsonScript("comparison-widget-data");
+        const controls = document.getElementById("comparison-controls");
+        if (!payload || !controls) {
+          return;
+        }
+
+        const state = { selection: payload.default_preset || DEFAULT_PRESET };
+        rerenderComparisonWidget = () => {
+          renderSeverityControls(controls, state, rerenderComparisonWidget);
+          renderComparisonChart(payload, state.selection);
+        };
+        rerenderComparisonWidget();
+      }
+
+      window.addEventListener("beforeprint", () => {
+        const drawers = Array.from(document.querySelectorAll("details.drawer"));
+        openStates = drawers.map((drawer) => drawer.open);
+        drawers.forEach((drawer) => {
+          drawer.open = true;
+        });
+        if (typeof rerenderComparisonWidget === "function") {
+          rerenderComparisonWidget();
+        }
+      });
+
+      window.addEventListener("afterprint", () => {
+        const drawers = Array.from(document.querySelectorAll("details.drawer"));
+        drawers.forEach((drawer, index) => {
+          drawer.open = Boolean(openStates[index]);
+        });
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initComparisonWidget();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Brian Williams">
+<meta name="dcterms.date" content="2026-01-04">
+
+<title>MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier – Vartia.ai</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<link href="../../assets/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d3c09cf01b9717715406c5b992d80823.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<!-- Google Tag Manager -->
+<script>
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KWNP27BF');
+</script>
+<!-- End Google Tag Manager -->
+
+
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../../styles/site-background.css">
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-search-results"></div>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">MemSafeEval Part 3: Building a Synthetic Dataset for a Vulnerability Classifier</h1>
+            <p class="subtitle lead">Generating thousands of verified vulnerabilities with sanitizers as the source of truth</p>
+                                <div class="quarto-categories">
+                <div class="quarto-category">CVE</div>
+                <div class="quarto-category">Software Weakness</div>
+                <div class="quarto-category">Memory Vulnerabilities</div>
+                <div class="quarto-category">Embeddings</div>
+                <div class="quarto-category">Synthetic Data</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Brian Williams </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">January 4, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+<!-- Google Tag Manager (noscript) -->
+<script>
+(function() {
+  var ns = document.getElementById('gtm-noscript');
+  if (ns && document.body) {
+    document.body.insertBefore(ns, document.body.firstChild);
+  }
+})();
+</script>
+<noscript id="gtm-noscript"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KWNP27BF" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+<div class="nav-header">
+  <a href="../../" class="nav-logo">
+    <img src="../../assets/vartia_logo.svg" alt="Vartia logo">
+  </a>
+  <a href="../../book.html" class="nav-cta">
+     Book a Consult
+  </a>
+</div>
+
+
+
+
+
+<section id="vartia-memory-safety-eval-building-a-synthetic-dataset-for-a-vulnerability-classifier" class="level1">
+<h1>Vartia Memory Safety Eval: Building a Synthetic Dataset for a Vulnerability Classifier</h1>
+<p><span class="article-subtitle">Generating thousands of verified vulnerabilities with sanitizers as the source of truth</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="article_hero.png" class="article-hero img-fluid figure-img"></p>
+<figcaption>Illustration of glowing cubes on an assembly line</figcaption>
+</figure>
+</div>
+<p><em>Part 3 of the MemSafeEval series.</em></p>
+<p><a href="../mem_safe_eval2/" class="article-nav">← Part 2: When Are Two Bugs the Same Bug</a></p>
+<p>In Part 2, we ended with a set of <strong>67 broad vulnerability signature types</strong>. Each signature type included a structured description, at least one vulnerable function, a narrative explanation of the vulnerability, and a patch showing how the vulnerability was fixed.</p>
+<p>At that point, we had <strong>single code samples for all 67 signature types</strong>, but only a small number of <em>training pairs</em>.</p>
+<p>Fewer than 10 signatures had enough code samples to support meaningful comparison, and the majority had fewer than five training pairs. In order to train a model to correctly identify all these signature types, we need on the order of <strong>50–100 code sample pairs per category</strong>.</p>
+<p>This kind of imbalance is expected. Real-world CVEs cluster heavily around a small number of bug patterns, leaving many categories underrepresented. Fortunately, this is a problem we can solve by using a generative model to create synthetic code sample pairs for training.</p>
+<section id="what-makes-a-good-code-sample" class="level2">
+<h2 class="anchored" data-anchor-id="what-makes-a-good-code-sample">What Makes a Good Code Sample</h2>
+<p>Not all code samples are equally useful for training embeddings. A good synthetic code sample needs to satisfy several constraints simultaneously:</p>
+<ul>
+<li>It embodies the <strong>same vulnerability mechanism</strong> as the original code sample.</li>
+<li>It looks like it came from a real production codebase:
+<ul>
+<li>non-trivial control flow</li>
+<li>custom data structures</li>
+<li>realistic naming and structure</li>
+<li>It has no obvious tells that it is synthetic.</li>
+</ul></li>
+<li>It is easy to compile, run, and instrument.</li>
+<li>Most importantly, it can be <strong>validated algorithmically</strong>:
+<ul>
+<li>no human judgment</li>
+<li>no “looks right” reasoning</li>
+<li>the bug either triggers or it doesn’t</li>
+</ul></li>
+</ul>
+<p>If a code sample cannot be verified automatically, it is not suitable as training data.</p>
+</section>
+<section id="why-pairs-and-why-negatives-matter" class="level2">
+<h2 class="anchored" data-anchor-id="why-pairs-and-why-negatives-matter">Why Pairs — and Why Negatives Matter</h2>
+<p>The goal of this dataset is to train <strong>embeddings</strong>, not a simple classifier. Embeddings learn by comparing code samples to one another. As mentioned in article 2, the final pairs are determined by using an LLM to judge if a pair is the same.</p>
+<p>That means we need:</p>
+<ul>
+<li><strong>Positive pairs</strong>: two code samples of the same vulnerability</li>
+<li><strong>Negative pairs</strong>: code samples of different vulnerability</li>
+</ul>
+<p>But there is a third, critical category: <strong>hard negative pairs</strong>.</p>
+<p>A hard negative pair consists of a vulnerable sample and its patched version. The hard negative sample is identical to the positive sample in every meaningful way <em>except</em> for the bug itself. In this project, the most important hard negative samples are the <strong>patched versions</strong> of the vulnerable functions.</p>
+<p>These hard negative pairs force the model to learn what <em>actually matters</em>. They prevent superficially similar but fundamentally different bugs from collapsing into the same cluster. Without them, the model learns the wrong signal.</p>
+<p>In short:</p>
+<ul>
+<li>positives pull embeddings together</li>
+<li>negatives push them apart</li>
+<li>hard negatives sharpen the boundary</li>
+</ul>
+</section>
+<section id="how-do-we-know-the-code-samples-are-correct" class="level2">
+<h2 class="anchored" data-anchor-id="how-do-we-know-the-code-samples-are-correct">How Do We Know the Code Samples are Correct</h2>
+<p>Bad labels poison embedding training. Empirically, even modest label corruption measurably degrades learned representations and downstream accuracy <span class="citation" data-cites="li2022selective">(<a href="#ref-li2022selective" role="doc-biblioref">Li et al. 2022</a>)</span>.</p>
+<p>Because of this, every code sample used for training, must be generated and validated through a <strong>repeatable, unambiguous process</strong>.</p>
+<p>That process starts with precise definitions.</p>
+</section>
+<section id="defining-the-vulnerability-precisely" class="level2">
+<h2 class="anchored" data-anchor-id="defining-the-vulnerability-precisely">Defining the Vulnerability Precisely</h2>
+<p>As in earlier stages of the project, manually writing detailed definitions for all 67 signature types was not practical. Instead, we used a structured process to derive <strong>canonical vulnerability definitions</strong> from the existing code samples.</p>
+<p>For each signature type, an LLM was used to:</p>
+<ul>
+<li>summarize the defining characteristics of the vulnerability</li>
+<li>identify what <em>must</em> be present for the bug to exist</li>
+<li>identify what must <em>not</em> be present</li>
+<li>describe how the vulnerability is typically fixed</li>
+</ul>
+<p>These definitions were captured in what we call a <strong>vulnerability card</strong>.</p>
+<p>Each vulnerability card includes:</p>
+<ul>
+<li>a natural-language definition of the bug</li>
+<li>constraints on how it should appear in code</li>
+<li>instructions for creating both a vulnerable version and a fixed version</li>
+<li>guidance on how the vulnerability should be triggered and detected</li>
+</ul>
+<p>Based on this vulnerability card, a local coding agent generates:</p>
+<ul>
+<li>a new vulnerable code sample</li>
+<li>the corresponding fix</li>
+<li>a script to compile, instrument, and verify both</li>
+</ul>
+<p>The script is the source of truth. If it passes, the code sample is accepted. Additional human spot checking is also needed to verify the accuracy of the script and code samples.</p>
+</section>
+<section id="single-code-sample-generation-loop" class="level2">
+<h2 class="anchored" data-anchor-id="single-code-sample-generation-loop">Single Code Sample Generation Loop</h2>
+<p>The initial setup for each signature type follows a tight feedback loop:</p>
+<ol type="1">
+<li>The agent reads the vulnerability card.</li>
+<li>The agent produces a code sample containing the vulnerability.</li>
+<li>The agent adds code to reliably trigger the vulnerability.</li>
+<li>The agent writes an evaluation harness to compile, instrument and validate the code sample.</li>
+<li>The evaluation harness is executed to confirm the vulnerability triggers.</li>
+<li>If validation fails too frequently the vulnerability card or code sample is updated.</li>
+</ol>
+<p>This loop continues until <strong>one fully validated code sample</strong> exists for the signature type, along with a reliable validation script.</p>
+<p>At this point, the signature type is ready for scaling.</p>
+<p>Then all the evaluation harnesses across the signature types are compared and a set of canonical evaluation harnesses are created. We ended up with 8 classes of evaluation harness for the 67 signature types.</p>
+</section>
+<section id="batch-code-sample-generation" class="level2">
+<h2 class="anchored" data-anchor-id="batch-code-sample-generation">Batch Code Sample Generation</h2>
+<p>Once the environment is stable, batch generation begins.</p>
+<p>A secondary, cheaper model is invoked with a simplified prompt:</p>
+<ul>
+<li>generate a new vulnerable code sample matching the vulnerability card</li>
+<li>generate the corresponding fix</li>
+</ul>
+<p>Each generated pair is placed in its own directory and validated using the same script. If validation passes, the code sample is accepted. If it fails, the code sample is rejected.</p>
+<p>When failure rates are high, the vulnerability card is refined and the process repeats. This continues until most generated code samples are accepted. Once a signature type reaches its target number of code samples, it is considered complete.</p>
+</section>
+<section id="expanding-coverage-by-enumerating-subtypes-within-a-signature-type" class="level2">
+<h2 class="anchored" data-anchor-id="expanding-coverage-by-enumerating-subtypes-within-a-signature-type">Expanding Coverage by Enumerating Subtypes Within a Signature Type</h2>
+<p>Even with a stable signature definition, each signature type usually contains multiple subtypes (distinct ways the same underlying vulnerability shows up in real code). If we don’t cover those subtypes, the embedding model risks learning only limited instances of the signature type.</p>
+<p>The generation strategy is then:</p>
+<ol type="1">
+<li>For each signature type, generate a subtype checklist.</li>
+<li>Require the generator to produce code samples for each subtype, not just “another random sample.”</li>
+<li>Validate each candidate with the same evaluation harness (sanitizers + trigger), and accept only code samples that pass.</li>
+<li>Track subtype coverage in the dashboard, so “30 code samples per signature type” is now “30 code samples per subtype”.</li>
+</ol>
+<p>This turns synthetic data generation into a deliberate coverage plan: not just more data, but representative data across the realistic ways a vulnerability occurs.</p>
+</section>
+<section id="increasing-diversity-without-excess-llm-calls" class="level2">
+<h2 class="anchored" data-anchor-id="increasing-diversity-without-excess-llm-calls">Increasing Diversity Without Excess LLM Calls</h2>
+<p>After a stable pool of validated code samples exists, diversity can be expanded further by:</p>
+<ul>
+<li>renaming variables and data structures using AST-based transformations</li>
+<li>reorganizing code layout</li>
+<li>slicing functions from larger real-world codebases and injecting the vulnerability</li>
+<li>template seeding from real code: pull small, non-vulnerable functions from other codebases as “style templates,” then inject the same vulnerability pattern into those templates and slice the resulting function into the dataset.</li>
+</ul>
+<p>These transformations preserve the vulnerability semantics while increasing stylistic variation, reducing the need for additional LLM calls.</p>
+</section>
+<section id="human-in-the-loop" class="level2">
+<h2 class="anchored" data-anchor-id="human-in-the-loop">Human in the Loop</h2>
+<p>Although the system is largely automated, <strong>human oversight is still essential</strong>.</p>
+<p>A Streamlit-based inspection tool was built to:</p>
+<ul>
+<li>track success and failure rates per signature type</li>
+<li>inspect validated and rejected code samples</li>
+<li>spot-check generated code for subtle errors</li>
+</ul>
+<p>Spot-checking a small number of code samples per signature type provides confidence that the system is behaving as intended.</p>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>By the end of this process, each vulnerability signature type has:</p>
+<ul>
+<li>a precise definition</li>
+<li>a reliable evaluation harness</li>
+<li>a growing pool of validated vulnerable and fixed code samples</li>
+<li>positive, negative, and hard-negative pairs suitable for embedding training</li>
+</ul>
+<p>This synthetic dataset forms the foundation for the next step: <strong>training and evaluating embeddings that capture the true structure of software vulnerability</strong>.</p>
+<blockquote class="blockquote">
+<p>I’m turning this into a repeatable playbook for custom embeddings + evaluation loops. If you want to sanity-check your own pipeline or talk through an approach, book a call below.</p>
+</blockquote>
+
+
+
+</section>
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-li2022selective" class="csl-entry" role="listitem">
+Li, Shikun, Xiaobo Xia, Shiming Ge, and Tongliang Liu. 2022. <span>“Selective-Supervised Contrastive Learning with Noisy Labels.”</span> <em>Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, 316–25. <a href="https://openaccess.thecvf.com/content/CVPR2022/papers/Li_Selective-Supervised_Contrastive_Learning_With_Noisy_Labels_CVPR_2022_paper.pdf">https://openaccess.thecvf.com/content/CVPR2022/papers/Li_Selective-Supervised_Contrastive_Learning_With_Noisy_Labels_CVPR_2022_paper.pdf</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script src="../../assets/utm-propagate.js"></script>
+<div class="article-cta">
+  <p class="article-cta-text">We help businesses and teams put AI to work. Book a consult to find out more.</p>
+  <a href="../../book.html" class="cta-button primary">Book a Consult</a>
+</div>
+
+<footer class="post-meta-footer" aria-label="Post metadata">
+  <div class="post-meta-item">
+    <span class="post-meta-label">Author</span>
+    <span class="post-meta-value">Brian Williams
+</span>
+  </div>
+  <div class="post-meta-item">
+    <span class="post-meta-label">Published</span>
+    <span class="post-meta-value">January 4, 2026</span>
+  </div>
+</footer>
+
+<footer class="site-footer">
+  <p>© 2026 Vartia. All rights reserved.</p>
+</footer>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/vartia\.ai");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
