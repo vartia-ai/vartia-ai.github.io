@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>libtiff · Memory Safety Assessment — Vartia.ai</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #080808;
+    --bg2:        #0d0d0d;
+    --surface:    #111111;
+    --surface2:   #161616;
+    --grid:       rgba(255,255,255,0.08);
+    --grid-fine:  rgba(255,255,255,0.03);
+    --border:     rgba(255,255,255,0.10);
+    --border-hi:  rgba(255,255,255,0.18);
+    --text:       #E5E5E5;
+    --text2:      #CCCCCC;
+    --text-muted: #888888;
+    --text-dim:   #555555;
+    --white:      #F5F5F5;
+    --red:        #ef4444;
+    --red-dim:    rgba(239,68,68,0.12);
+    --red-mid:    rgba(239,68,68,0.25);
+    --green:      #22c55e;
+    --green-dim:  rgba(34,197,94,0.12);
+    --green-mid:  rgba(34,197,94,0.25);
+    --amber:      #f59e0b;
+    --amber-dim:  rgba(245,158,11,0.12);
+    --amber-mid:  rgba(245,158,11,0.25);
+    --blue:       #3b82f6;
+    --blue-dim:   rgba(59,130,246,0.12);
+    --chart-industry: #555555;
+    --chart-client:   #ef4444;
+    --sans:       'Inter', system-ui, sans-serif;
+    --mono:       'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 18px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── GRID TEXTURE (matches site) ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-fine) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px);
+    background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* ── STICKY BAR ── */
+  .sticky-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,8,8,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--grid);
+    padding: 0 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .sticky-brand {
+    font-family: var(--mono); font-size: 13px;
+    letter-spacing: 0.06em; color: var(--text-muted);
+  }
+  .sticky-brand strong { color: var(--text); font-weight: 500; }
+  .sticky-pills { display: flex; gap: 10px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 8px;
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.05em; border: 1px solid;
+  }
+  .pill-green  { background: var(--green-dim); color: var(--green); border-color: var(--green-mid); }
+  .pill-amber  { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-mid); }
+  .pill-red    { background: var(--red-dim);   color: var(--red);   border-color: var(--red-mid); }
+  .pill-blue   { background: var(--blue-dim);  color: var(--blue);  border-color: rgba(59,130,246,0.25); }
+  .pill-neutral { background: rgba(255,255,255,0.04); color: var(--text-muted); border-color: var(--border); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-green { background: var(--green); }
+  .dot-red   { background: var(--red); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1060px; margin: 0 auto; padding: 0 48px; position: relative; z-index: 1; }
+
+  section {
+    padding: 88px 0; border-bottom: 1px solid var(--border);
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  section.vis { opacity: 1; transform: translateY(0); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 96px 0 80px; border-bottom: 1px solid var(--border);
+    opacity: 0; animation: riseUp 0.6s 0.1s ease both;
+  }
+  @keyframes riseUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 24px; display: flex; align-items: center; gap: 14px;
+  }
+  .eyebrow-line { width: 40px; height: 1px; background: var(--border-hi); }
+
+  .hero h1 {
+    font-family: var(--sans); font-size: clamp(38px, 5vw, 52px);
+    font-weight: 700; line-height: 1.12; letter-spacing: -0.025em;
+    color: var(--white); margin-bottom: 20px;
+  }
+
+  .hero-lead {
+    font-size: 20px; color: var(--text2); max-width: 680px;
+    line-height: 1.7; font-weight: 300; margin-bottom: 40px;
+  }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* ── SECTION TYPOGRAPHY ── */
+  .section-eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+  }
+  h2 {
+    font-family: var(--sans); font-size: 32px; font-weight: 700;
+    color: var(--white); margin-bottom: 16px; line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+  p.lead {
+    font-size: 18px; color: var(--text2); max-width: 720px;
+    line-height: 1.75; font-weight: 300; margin-bottom: 44px;
+  }
+  p.body {
+    font-size: 17px; color: var(--text-muted); max-width: 720px;
+    line-height: 1.8; margin-bottom: 24px;
+  }
+
+  /* ── HISTOGRAM ── */
+  .histogram-wrap {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 44px 44px 32px;
+    margin-bottom: 44px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+  }
+  .histogram-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    margin-bottom: 6px;
+  }
+  .histogram-subtitle {
+    font-size: 13px; color: var(--text-muted); margin-bottom: 32px;
+  }
+  .histogram {
+    display: flex; align-items: stretch; justify-content: space-between;
+    gap: 0; height: 260px; position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .histogram::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to top,
+      transparent 0px, transparent 51px,
+      rgba(255,255,255,0.04) 51px, rgba(255,255,255,0.04) 52px
+    );
+    pointer-events: none;
+  }
+  .hist-group {
+    flex: 1; display: flex; align-items: flex-end;
+    justify-content: center; gap: 5px;
+    position: relative; z-index: 1;
+    padding: 0 6px; height: 100%;
+  }
+  .hist-bar {
+    width: 32px; border-radius: 4px 4px 0 0;
+    position: relative; min-height: 0;
+    transition: height 1s cubic-bezier(0.16,1,0.3,1);
+  }
+  .hist-bar.industry { background: var(--chart-industry); }
+  .hist-bar.client   { background: var(--chart-client); }
+  .hist-bar-label {
+    position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .hist-bar.industry .hist-bar-label { color: var(--text-muted); }
+  .hist-bar.client .hist-bar-label   { color: var(--red); }
+
+  .histogram-labels {
+    display: flex; justify-content: space-between; margin-top: 14px;
+  }
+  .hist-label {
+    flex: 1; text-align: center;
+    font-size: 12px; color: var(--text-muted); line-height: 1.35;
+  }
+  .histogram-legend {
+    display: flex; gap: 24px; margin-top: 22px; justify-content: center;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-muted);
+  }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-swatch.industry { background: var(--chart-industry); }
+  .legend-swatch.client   { background: var(--chart-client); }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 14px 14px 0;
+    padding: 28px 36px;
+    margin-bottom: 44px;
+  }
+  .callout-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .callout-text {
+    font-size: 17px; color: var(--text2); line-height: 1.7; max-width: 720px;
+  }
+  .callout-text strong { color: var(--white); font-weight: 600; }
+  .callout-text code {
+    font-family: var(--mono); font-size: 14px;
+    background: rgba(255,255,255,0.06); padding: 2px 8px;
+    border-radius: 4px; color: var(--text);
+  }
+
+  /* ── STAT ROW ── */
+  .stat-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; margin-bottom: 44px;
+  }
+  .stat-cell {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg2) 100%);
+    padding: 32px 28px;
+  }
+  .stat-num {
+    font-family: var(--sans); font-size: 48px; line-height: 1;
+    font-weight: 700; margin-bottom: 10px; color: var(--white);
+  }
+  .stat-num.red   { color: var(--red); }
+  .stat-num.green { color: var(--green); }
+  .stat-num.amber { color: var(--amber); }
+  .stat-label { font-size: 15px; color: var(--text2); line-height: 1.5; }
+  .stat-sub {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    margin-top: 8px; letter-spacing: 0.04em;
+  }
+
+  /* ── BREAKOUT CARDS ── */
+  .breakout-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px; margin-top: 12px;
+  }
+  .breakout-card {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .breakout-card h4 {
+    font-size: 17px; font-weight: 600; color: var(--white); margin-bottom: 4px;
+  }
+  .breakout-card .sub-label {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px;
+  }
+  .mini-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .mini-bar-row:last-child { margin-bottom: 0; }
+  .mini-bar-name { font-size: 13px; color: var(--text-muted); width: 130px; flex-shrink: 0; }
+  .mini-bar-track {
+    flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+    border-radius: 4px; overflow: hidden;
+  }
+  .mini-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.16,1,0.3,1); width: 0;
+  }
+  .mini-bar-fill.red   { background: var(--red); }
+  .mini-bar-fill.amber { background: var(--amber); }
+  .mini-bar-fill.muted { background: var(--text-dim); }
+  .mini-bar-val {
+    font-family: var(--mono); font-size: 12px; color: var(--text-muted);
+    width: 40px; text-align: right; flex-shrink: 0;
+  }
+
+  /* ── HOTSPOTS ── */
+  .hotspot-list { margin-top: 8px; }
+  .hotspot-row {
+    display: flex; align-items: center; gap: 20px;
+    padding: 20px 0; border-bottom: 1px solid var(--border);
+  }
+  .hotspot-row:last-child { border-bottom: none; }
+  .hotspot-rank {
+    font-size: 24px; font-weight: 700; color: var(--text-dim);
+    width: 36px; text-align: center; flex-shrink: 0;
+  }
+  .hotspot-file {
+    font-family: var(--mono); font-size: 14px; color: var(--text);
+    width: 190px; flex-shrink: 0;
+  }
+  .hotspot-bar-wrap {
+    flex: 1; height: 8px; background: rgba(255,255,255,0.06);
+    border-radius: 4px; overflow: hidden;
+  }
+  .hotspot-bar {
+    height: 100%; border-radius: 4px; width: 0;
+    transition: width 1.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .bar-red   { background: var(--red); }
+  .bar-amber { background: var(--amber); }
+  .hotspot-count {
+    font-family: var(--mono); font-size: 13px; color: var(--text-muted);
+    width: 110px; text-align: right; flex-shrink: 0;
+  }
+  .hotspot-badge { width: 100px; text-align: right; flex-shrink: 0; }
+
+  /* ── CVE CARDS ── */
+  .cve-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 12px; }
+  .cve-card {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.25s;
+  }
+  .cve-card:hover {
+    border-color: var(--border-hi);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 56px rgba(0,0,0,0.5);
+  }
+  .cve-card-top {
+    padding: 28px 28px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  }
+  .cve-id {
+    font-family: var(--mono); font-size: 15px; font-weight: 500;
+    color: var(--red); margin-bottom: 8px;
+  }
+  .cve-title { font-size: 16px; font-weight: 500; color: var(--text); line-height: 1.45; }
+  .cve-body { padding: 24px 28px; }
+  .cve-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04); gap: 14px;
+  }
+  .cve-row:last-child { border-bottom: none; }
+  .cve-key {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; padding-top: 2px;
+  }
+  .cve-val { font-size: 14px; color: var(--text2); text-align: right; line-height: 1.45; }
+  .cve-val.green { color: var(--green); font-weight: 600; }
+  .cve-val.red   { color: var(--red); font-weight: 600; }
+  .cve-val.mono  { font-family: var(--mono); font-size: 12px; }
+
+  /* TRACE */
+  .trace-btn {
+    margin-top: 16px; width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); color: var(--text-muted);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 10px 16px; cursor: pointer;
+    border-radius: 8px; display: flex; align-items: center; gap: 8px;
+    transition: all 0.18s;
+  }
+  .trace-btn:hover { background: rgba(255,255,255,0.06); border-color: var(--border-hi); }
+  .trace-btn .arr { transition: transform 0.2s; font-size: 10px; }
+  .trace-btn.open .arr { transform: rotate(90deg); }
+  .trace-block {
+    display: none; margin-top: 14px;
+    background: #050505; border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; overflow-x: auto;
+  }
+  .trace-block.open { display: block; }
+  .trace-block pre {
+    font-family: var(--mono); font-size: 12px; line-height: 1.8;
+    white-space: pre-wrap; color: #6a7a6a;
+  }
+  .t-err { color: #ef6060; } .t-loc { color: #5a7a5a; }
+  .t-frm { color: #5070a0; } .t-sum { color: #c4982a; }
+
+  /* ── METHODOLOGY ── */
+  .method-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 12px; }
+  .method-card {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .method-num {
+    font-size: 44px; font-weight: 700; color: rgba(255,255,255,0.08);
+    line-height: 1; margin-bottom: 18px;
+  }
+  .method-card h4 { font-size: 17px; font-weight: 600; color: var(--white); margin-bottom: 10px; }
+  .method-card p { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+
+  /* ── QUERY STACK ── */
+  .query-stack {
+    border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; background: var(--border);
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .query-row {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg2) 100%);
+    padding: 18px 24px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .q-id {
+    font-family: var(--mono); font-size: 13px; color: var(--blue);
+    width: 280px; flex-shrink: 0;
+  }
+  .q-class { font-size: 15px; color: var(--text2); flex: 1; }
+  .q-status { flex-shrink: 0; }
+
+  /* ── CTA ── */
+  .cta-section { padding: 96px 0; text-align: center; border-bottom: none; }
+  .cta-section h2 { font-size: 38px; margin-bottom: 16px; }
+  .cta-section p {
+    font-size: 19px; color: var(--text2); max-width: 520px;
+    margin: 0 auto 40px; font-weight: 300; line-height: 1.65;
+  }
+  .cta-btn {
+    display: inline-block; background: #FFFFFF; color: #000000;
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 14px 36px; border-radius: 10px; text-decoration: none;
+    border: 2px solid #FFFFFF;
+    transition: all 0.2s;
+  }
+  .cta-btn:hover {
+    background: #F0F0F0;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,255,255,0.15);
+  }
+  .cta-sub {
+    margin-top: 18px; font-family: var(--mono);
+    font-size: 13px; color: var(--text-dim); letter-spacing: 0.04em;
+  }
+
+  /* ── APPENDIX ── */
+  details {
+    border: 1px solid var(--border); border-radius: 14px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  details summary {
+    padding: 20px 24px; background: var(--surface); cursor: pointer;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted); list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+    user-select: none;
+  }
+  details summary:hover { background: var(--surface2); }
+  details summary::after { content: '↓'; }
+  details[open] summary::after { content: '↑'; }
+  .art-table { width: 100%; border-collapse: collapse; }
+  .art-table td {
+    padding: 11px 24px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted); vertical-align: top;
+  }
+  .art-table td:first-child { color: var(--blue); width: 340px; }
+  .art-table td:nth-child(2) { color: var(--text-dim); width: 80px; }
+  .art-table td:last-child { word-break: break-all; color: var(--text-dim); font-size: 10px; }
+
+  .tax-table { width: 100%; border-collapse: collapse; }
+  .tax-table td {
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 14px; vertical-align: top;
+  }
+  .tax-table td:first-child { color: var(--white); font-weight: 600; width: 170px; }
+  .tax-table td:last-child { color: var(--text-muted); }
+  .tax-table tr:last-child td { border-bottom: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 880px) {
+    .container, .sticky-bar { padding: 0 24px; }
+    .stat-row { grid-template-columns: 1fr; }
+    .cve-grid, .method-grid, .breakout-grid { grid-template-columns: 1fr; }
+    .histogram { height: 200px; }
+    .hist-bar { width: 22px; }
+    .hotspot-file { width: 130px; }
+    .q-id { width: 170px; }
+    .histogram-wrap { padding: 28px 20px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ STICKY BAR ═══ -->
+<div class="sticky-bar">
+  <div class="sticky-brand"><strong>Vartia.ai</strong> · Memory Safety Assessment</div>
+  <div class="sticky-pills">
+    <div class="pill pill-neutral">libtiff · master</div>
+    <div class="pill pill-neutral">2026-03-04</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ HERO ═══ -->
+<div class="hero">
+  <div class="container">
+    <div class="eyebrow"><div class="eyebrow-line"></div>Memory Safety Assessment</div>
+    <h1>libtiff<br>Security Code Analysis</h1>
+    <p class="hero-lead">A historical analysis of HIGH-severity CVEs in libtiff, benchmarked against comparable C/C++ imaging libraries. Findings are witness-backed — every reported issue includes a sanitizer-confirmed reproducer.</p>
+    <div class="hero-meta">
+      <div class="pill pill-neutral">Scope: HIGH severity · NVD baseline</div>
+      <div class="pill pill-neutral">Benchmark: 47 C/C++ imaging libraries</div>
+      <div class="pill pill-green"><span class="dot dot-green"></span> Witness-only findings</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ BENCHMARK ═══ -->
+<section id="benchmark">
+  <div class="container">
+    <div class="section-eyebrow">Weakness Class Distribution</div>
+    <h2>How libtiff compares</h2>
+    <p class="lead">HIGH-severity CVEs grouped by weakness class, measured against a composite of 47 comparable C/C++ imaging libraries.</p>
+
+    <div class="histogram-wrap">
+      <div class="histogram-title">HIGH-Severity CVE Distribution by Weakness Class</div>
+      <div class="histogram-subtitle">Percentage of total HIGH CVEs attributed to each class</div>
+      <div class="histogram" id="mainHistogram">
+        <div class="hist-group" data-industry="38" data-client="52">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">38%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">52%</div></div>
+        </div>
+        <div class="hist-group" data-industry="22" data-client="26">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">22%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">26%</div></div>
+        </div>
+        <div class="hist-group" data-industry="14" data-client="7">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">14%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">7%</div></div>
+        </div>
+        <div class="hist-group" data-industry="11" data-client="7">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">11%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">7%</div></div>
+        </div>
+        <div class="hist-group" data-industry="7" data-client="4">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">7%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">4%</div></div>
+        </div>
+        <div class="hist-group" data-industry="5" data-client="4">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">5%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">4%</div></div>
+        </div>
+        <div class="hist-group" data-industry="3" data-client="0">
+          <div class="hist-bar industry" style="height:0"><div class="hist-bar-label">3%</div></div>
+          <div class="hist-bar client"   style="height:0"><div class="hist-bar-label">0%</div></div>
+        </div>
+      </div>
+      <div class="histogram-labels">
+        <div class="hist-label">Memory<br>Bounds</div>
+        <div class="hist-label">Integer<br>Overflow</div>
+        <div class="hist-label">Use-After-<br>Free</div>
+        <div class="hist-label">Null<br>Safety</div>
+        <div class="hist-label">Resource<br>Mgmt</div>
+        <div class="hist-label">Type<br>Safety</div>
+        <div class="hist-label">Uninit.<br>Memory</div>
+      </div>
+      <div class="histogram-legend">
+        <div class="legend-item"><div class="legend-swatch industry"></div>C/C++ imaging libraries (n=47)</div>
+        <div class="legend-item"><div class="legend-swatch client"></div>libtiff</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">Notable Observation</div>
+      <div class="callout-text">
+        <strong>78%</strong> of libtiff's HIGH-severity CVEs fall into two closely related classes (memory bounds + integer overflow), compared to <strong>60%</strong> across the benchmark composite. Additionally, <strong>67%</strong> of the memory-bounds findings originate in a single decode path (<code>tif_getimage.c</code>). This concentration pattern appears in approximately 12% of comparable libraries.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ BREAKOUT ═══ -->
+<section id="breakout">
+  <div class="container">
+    <div class="section-eyebrow">Weakness Detail</div>
+    <h2>Inside the dominant classes</h2>
+    <p class="lead">A closer look at the specific weakness patterns within memory bounds and integer overflow — the two classes that account for the majority of historical HIGH-severity findings.</p>
+    <div class="breakout-grid">
+      <div class="breakout-card">
+        <h4>Memory Bounds</h4>
+        <div class="sub-label">14 of 27 HIGH CVEs</div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">OOB Read</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill red" data-width="57"></div></div>
+          <div class="mini-bar-val">57%</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">OOB Write</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill red" data-width="29"></div></div>
+          <div class="mini-bar-val">29%</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">Stack Overflow</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill amber" data-width="7"></div></div>
+          <div class="mini-bar-val">7%</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">OOB Generic</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill muted" data-width="7"></div></div>
+          <div class="mini-bar-val">7%</div>
+        </div>
+      </div>
+      <div class="breakout-card">
+        <h4>Integer Overflow</h4>
+        <div class="sub-label">7 of 27 HIGH CVEs</div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">Numeric → Access</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill red" data-width="43"></div></div>
+          <div class="mini-bar-val">43%</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">Bounds → Access</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill red" data-width="29"></div></div>
+          <div class="mini-bar-val">29%</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">Numeric → Mgmt</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill amber" data-width="14"></div></div>
+          <div class="mini-bar-val">14%</div>
+        </div>
+        <div class="mini-bar-row">
+          <div class="mini-bar-name">Numeric → I/O</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill muted" data-width="14"></div></div>
+          <div class="mini-bar-val">14%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ REMEDIATION ═══ -->
+<section id="leverage">
+  <div class="container">
+    <div class="section-eyebrow">Remediation Leverage</div>
+    <h2>Where investment has the highest return</h2>
+    <p class="lead">Four source files account for over half the historical HIGH-severity CVEs. Focused remediation in these paths offers disproportionate risk reduction.</p>
+    <div class="stat-row">
+      <div class="stat-cell">
+        <div class="stat-num">27</div>
+        <div class="stat-label">HIGH-severity CVEs in eight-year baseline</div>
+        <div class="stat-sub">NVD-scored findings</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num amber">52%</div>
+        <div class="stat-label">Concentrated in four source files</div>
+        <div class="stat-sub">14 of 27 HIGH CVEs</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num green">0</div>
+        <div class="stat-label">False positives in analysis output</div>
+        <div class="stat-sub">No witness → no finding</div>
+      </div>
+    </div>
+    <div class="hotspot-list">
+      <div class="hotspot-row">
+        <div class="hotspot-rank">1</div>
+        <div class="hotspot-file">tif_getimage.c</div>
+        <div class="hotspot-bar-wrap"><div class="hotspot-bar bar-red" data-pct="38"></div></div>
+        <div class="hotspot-count">5 CVEs · 19%</div>
+        <div class="hotspot-badge"><div class="pill pill-green" style="font-size:11px;padding:4px 12px">Analyzed</div></div>
+      </div>
+      <div class="hotspot-row">
+        <div class="hotspot-rank">2</div>
+        <div class="hotspot-file">tiff2pdf.c</div>
+        <div class="hotspot-bar-wrap"><div class="hotspot-bar bar-amber" data-pct="30"></div></div>
+        <div class="hotspot-count">4 CVEs · 15%</div>
+        <div class="hotspot-badge"><div class="pill pill-amber" style="font-size:11px;padding:4px 12px">Planned</div></div>
+      </div>
+      <div class="hotspot-row">
+        <div class="hotspot-rank">3</div>
+        <div class="hotspot-file">tiffcrop.c</div>
+        <div class="hotspot-bar-wrap"><div class="hotspot-bar bar-amber" data-pct="30"></div></div>
+        <div class="hotspot-count">4 CVEs · 15%</div>
+        <div class="hotspot-badge"><div class="pill pill-amber" style="font-size:11px;padding:4px 12px">Planned</div></div>
+      </div>
+      <div class="hotspot-row">
+        <div class="hotspot-rank">4</div>
+        <div class="hotspot-file">tif_dirread.c</div>
+        <div class="hotspot-bar-wrap"><div class="hotspot-bar bar-amber" data-pct="8"></div></div>
+        <div class="hotspot-count">1 CVE · 4%</div>
+        <div class="hotspot-badge"><div class="pill pill-amber" style="font-size:11px;padding:4px 12px">Planned</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ PROOF ═══ -->
+<section id="proof">
+  <div class="container">
+    <div class="section-eyebrow">Confirmed Findings</div>
+    <h2>Witness-backed reproductions</h2>
+    <p class="lead">Each confirmed finding includes a sanitizer witness on the vulnerable commit and verified clean behavior on the fixed commit. Every finding ships with a one-command reproducer bundle.</p>
+    <div class="cve-grid">
+      <div class="cve-card">
+        <div class="cve-card-top">
+          <div>
+            <div class="cve-id">CVE-2023-52356</div>
+            <div class="cve-title">Out-of-bounds read via invalid tile coordinate in RGBA decode path</div>
+          </div>
+          <div class="pill pill-green" style="flex-shrink:0"><span class="dot dot-green"></span> Confirmed</div>
+        </div>
+        <div class="cve-body">
+          <div class="cve-row"><span class="cve-key">Weakness Class</span><span class="cve-val">Memory Bounds · OOB Read</span></div>
+          <div class="cve-row"><span class="cve-key">Affected Function</span><span class="cve-val mono">TIFFReadRGBATileExt()</span></div>
+          <div class="cve-row"><span class="cve-key">Sanitizer Signal</span><span class="cve-val red">ASan SEGV · null dereference in memmove</span></div>
+          <div class="cve-row"><span class="cve-key">Vulnerable Commit</span><span class="cve-val green">Crash reproduced ✓</span></div>
+          <div class="cve-row"><span class="cve-key">Fixed Commit</span><span class="cve-val green">Returns 0 + error log ✓</span></div>
+          <div class="cve-row"><span class="cve-key">Reproducer</span><span class="cve-val mono">repro_cve_2023_52356.c</span></div>
+          <button class="trace-btn" onclick="toggleTrace(this)"><span class="arr">▶</span> View sanitizer trace</button>
+          <div class="trace-block">
+<pre><span class="t-err">==11842==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000</span>
+<span class="t-loc">(pc 0x0000004f2a11 bp 0x7ffd0b2f6ad0 sp 0x7ffd0b2f69d8 T0)</span>
+The signal is caused by a READ memory access.
+<span class="t-frm">    #0  memmove (libtiff.so+0x2a11)</span>
+<span class="t-frm">    #1  TIFFReadRGBATileExt  tif_getimage.c:3306</span>
+<span class="t-frm">    #2  main  repro_cve_2023_52356.c:86</span>
+<span class="t-sum">SUMMARY: AddressSanitizer: SEGV in memmove</span></pre>
+          </div>
+        </div>
+      </div>
+      <div class="cve-card">
+        <div class="cve-card-top">
+          <div>
+            <div class="cve-id">CVE-2019-17546</div>
+            <div class="cve-title">Integer overflow in scanline size computation during RGBA strip conversion</div>
+          </div>
+          <div class="pill pill-green" style="flex-shrink:0"><span class="dot dot-green"></span> Confirmed</div>
+        </div>
+        <div class="cve-body">
+          <div class="cve-row"><span class="cve-key">Weakness Class</span><span class="cve-val">Integer Overflow · Numeric → Access</span></div>
+          <div class="cve-row"><span class="cve-key">Affected Function</span><span class="cve-val mono">gtStripContig()</span></div>
+          <div class="cve-row"><span class="cve-key">Sanitizer Signal</span><span class="cve-val red">ASan negative-size-param · size=−2,147,483,600</span></div>
+          <div class="cve-row"><span class="cve-key">Vulnerable Commit</span><span class="cve-val green">Crash reproduced ✓</span></div>
+          <div class="cve-row"><span class="cve-key">Fixed Commit</span><span class="cve-val green">Graceful overflow error ✓</span></div>
+          <div class="cve-row"><span class="cve-key">Reproducer</span><span class="cve-val mono">repro_cve_2019_17546.c</span></div>
+          <button class="trace-btn" onclick="toggleTrace(this)"><span class="arr">▶</span> View sanitizer trace</button>
+          <div class="trace-block">
+<pre><span class="t-err">==21209==ERROR: AddressSanitizer: negative-size-param: (size=-2147483600)</span>
+<span class="t-frm">    #0  __interceptor_memcpy  sanitizer_common_interceptors.inc:827</span>
+<span class="t-frm">    #1  _TIFFmemcpy  tif_unix.c:122</span>
+<span class="t-frm">    #2  gtStripContig  tif_getimage.c:1008</span>
+<span class="t-frm">    #3  TIFFRGBAImageGet  tif_getimage.c:566</span>
+<span class="t-frm">    #4  TIFFReadRGBAImageOriented  tif_getimage.c:292</span>
+<span class="t-frm">    #5  main  repro_cve_2019_17546.c:55</span>
+<span class="t-sum">SUMMARY: AddressSanitizer: negative-size-param in __interceptor_memcpy</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ METHODOLOGY ═══ -->
+<section id="method">
+  <div class="container">
+    <div class="section-eyebrow">Methodology</div>
+    <h2>How a finding earns that name</h2>
+    <p class="lead">Static analysis alone produces noise. Every finding in this assessment requires a sanitizer witness — a deterministic, reproducible proof artifact. No witness, no finding.</p>
+    <div class="method-grid">
+      <div class="method-card">
+        <div class="method-num">01</div>
+        <h4>Static candidate</h4>
+        <p>CodeQL identifies a code pattern matching a known weakness class. Retained for validation — not surfaced as a finding.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-num">02</div>
+        <h4>Sanitizer witness</h4>
+        <p>The candidate is exercised under ASan and UBSan with a targeted harness. A deterministic crash or sanitizer report becomes the witness.</p>
+      </div>
+      <div class="method-card">
+        <div class="method-num">03</div>
+        <h4>Confirmed finding</h4>
+        <p>Witness confirmed → finding promoted with reproducer bundle, build configuration, and git revision. One command to reproduce.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ COVERAGE ═══ -->
+<section id="coverage">
+  <div class="container">
+    <div class="section-eyebrow">Coverage &amp; Remediation Path</div>
+    <h2>What's covered and what's next</h2>
+    <p class="lead">Current analysis covers the full RGBA decode surface. Additional checks are validated and ready to extend coverage to the remaining high-leverage files.</p>
+    <div class="query-stack">
+      <div class="query-row"><div class="q-id">TileExtMissingBounds</div><div class="q-class">Memory bounds — out-of-range tile coordinate</div><div class="q-status"><div class="pill pill-green" style="font-size:11px;padding:4px 12px">Active</div></div></div>
+      <div class="query-row"><div class="q-id">StripContigScanlineOverflow</div><div class="q-class">Integer overflow — scanline size arithmetic</div><div class="q-status"><div class="pill pill-green" style="font-size:11px;padding:4px 12px">Active</div></div></div>
+      <div class="query-row"><div class="q-id">TilePointerArithmeticSizeT</div><div class="q-class">Integer overflow / pointer arithmetic — raster addressing</div><div class="q-status"><div class="pill pill-amber" style="font-size:11px;padding:4px 12px">Candidate</div></div></div>
+      <div class="query-row"><div class="q-id">TileWidthPlusWIntMax</div><div class="q-class">Narrowing cast — toskew computation guard</div><div class="q-status"><div class="pill pill-amber" style="font-size:11px;padding:4px 12px">Candidate</div></div></div>
+      <div class="query-row"><div class="q-id">StripExtMissingRowBounds</div><div class="q-class">Memory bounds — strip row offset validation</div><div class="q-status"><div class="pill pill-neutral" style="font-size:11px;padding:4px 12px">Planned</div></div></div>
+      <div class="query-row"><div class="q-id">RasterDimsClampToImage</div><div class="q-class">Input validation — width/height clamping</div><div class="q-status"><div class="pill pill-neutral" style="font-size:11px;padding:4px 12px">Planned</div></div></div>
+      <div class="query-row"><div class="q-id">CheckedMulForScanlineAlloc</div><div class="q-class">Integer overflow — allocation size computation</div><div class="q-status"><div class="pill pill-neutral" style="font-size:11px;padding:4px 12px">Planned</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ APPENDIX ═══ -->
+<section id="appendix" style="border-bottom:none; padding-bottom:0">
+  <div class="container">
+    <div class="section-eyebrow">Appendix</div>
+    <h2>Supporting materials</h2>
+    <details style="margin-top: 24px;">
+      <summary>Weakness class taxonomy</summary>
+      <div style="padding:24px 28px;">
+        <p style="margin-bottom:16px; font-size:15px; color:var(--text-muted); line-height:1.7;">Findings are classified using the Vartia weakness taxonomy, which groups vulnerabilities by <strong style="color:var(--white)">root cause mechanism</strong> rather than symptom.</p>
+        <table class="tax-table">
+          <tr><td>Memory Bounds</td><td>OOB Read, OOB Write, OOB Generic, Stack Overflow</td></tr>
+          <tr><td>Integer Overflow</td><td>Numeric/bounds overflow, type truncation</td></tr>
+          <tr><td>Use-After-Free</td><td>UAF, double free, invalid free</td></tr>
+          <tr><td>Null Safety</td><td>Null dereference across init, logic, and resource paths</td></tr>
+          <tr><td>Resource Mgmt</td><td>Memory leak, resource leak, resource exhaustion</td></tr>
+          <tr><td>Type Safety</td><td>Type confusion, format string, user pointer deref</td></tr>
+          <tr><td>Uninit. Memory</td><td>Uninitialized read across init, logic, and I/O paths</td></tr>
+        </table>
+      </div>
+    </details>
+    <details>
+      <summary>Artifact manifest · SHA-256 checksums</summary>
+      <table class="art-table">
+        <tr><td>appendix_a_libtiff_high_severity_weakness_report.md</td><td>33,442 B</td><td>9dbe647b90578bfc6193f98d1e9aff384674a0496d33c78e3be6b58d74af53b9</td></tr>
+        <tr><td>backtests/CVE-2019-17546/fix/codeql.sarif</td><td>929 B</td><td>09cd4ee69928f5a20585db2539ffb2edee6a544dcfde3e7a672217b4ce5935fa</td></tr>
+        <tr><td>backtests/CVE-2019-17546/fix/stdout.txt</td><td>61 B</td><td>ae741939bb28bf9b89f8b88b0d5211e5faa80a7bb16f8ccb35900dd31a745c7e</td></tr>
+        <tr><td>backtests/CVE-2019-17546/pre/asan.log</td><td>952 B</td><td>6b7885eaa3a9d767482c06b73bf58d2a241794e6441f99f48acc2fbd35c57c95</td></tr>
+        <tr><td>backtests/CVE-2023-52356/fix/codeql.sarif</td><td>911 B</td><td>1fcc0562c6b0844bfc759ffdcaf26e51e6fcc93c0d8b1387cedf076a056a716c</td></tr>
+        <tr><td>backtests/CVE-2023-52356/fix/stdout.txt</td><td>67 B</td><td>52f0e6196cc5c817cd1b8c14e04fd52648a7de01e6db590fd6a1d58f2dbc5302</td></tr>
+        <tr><td>backtests/CVE-2023-52356/pre/asan.log</td><td>731 B</td><td>2e907461c934c0c3b4cf3a5aa1d2274396250dc91876c7bc15c0f427c5463ed1</td></tr>
+        <tr><td>codeql/tif_getimage-pack.sarif</td><td>5,578 B</td><td>6ea64faa718655a1adcf5505c9459fb19afa07d9325ffaf31bf4042d26b979ae</td></tr>
+        <tr><td>harnesses/repro_cve_2019_17546.c</td><td>1,706 B</td><td>4b0b940d2b712d6266c6170c3160ee48e7babba7720a194872d255f44d6b4d24</td></tr>
+        <tr><td>harnesses/repro_cve_2023_52356.c</td><td>2,796 B</td><td>1944a90325e89a80512e234b1a6f40b01c415cc90dccff545f026c0bfc1b69e7</td></tr>
+      </table>
+    </details>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ CTA ═══ -->
+<div class="cta-section">
+  <div class="container">
+    <h2>Ready to close this class?</h2>
+    <p>We identify where your risk concentrates and deliver proof-backed findings with a clear remediation path.</p>
+    <a href="mailto:brian@vartia.ai" class="cta-btn">Talk to Vartia.ai</a>
+    <div class="cta-sub">brian@vartia.ai · vartia.ai</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCRIPT ═══ -->
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('vis');
+      e.target.querySelectorAll('.hotspot-bar[data-pct]').forEach(b => {
+        setTimeout(() => b.style.width = b.dataset.pct + '%', 150);
+      });
+      e.target.querySelectorAll('.mini-bar-fill[data-width]').forEach(b => {
+        setTimeout(() => b.style.width = b.dataset.width + '%', 150);
+      });
+      if (e.target.id === 'benchmark') {
+        setTimeout(() => {
+          const maxVal = 55;
+          document.querySelectorAll('.hist-group').forEach(g => {
+            const indH = (parseInt(g.dataset.industry) / maxVal) * 100;
+            const cliH = (parseInt(g.dataset.client) / maxVal) * 100;
+            const bars = g.querySelectorAll('.hist-bar');
+            bars[0].style.height = indH + '%';
+            bars[1].style.height = cliH + '%';
+          });
+        }, 200);
+      }
+    });
+  }, { threshold: 0.06 });
+  document.querySelectorAll('section').forEach(s => obs.observe(s));
+  function toggleTrace(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
